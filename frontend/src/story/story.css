@@ -157,3 +157,6 @@
 .s-points-grid p { font-size: 1.05rem; }
 .s-key-points .s-fine { color: #c3cac3; margin-top: 2rem; }
 .s-jump { padding: 0; border: 0; background: none; color: inherit; font: 700 1rem var(--body); text-decoration: underline; }
+
+.s-subhead { margin: 2rem 0 .25rem; font-size: clamp(1.4rem, 2.2vw, 2rem); }
+.s-trust .s-fine { color: #c3cac3; }

@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 
 const BASE = import.meta.env.VITE_API_URL ?? "";
 // Raise this whenever API shapes change, so an old saved copy is never read by newer code.
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
 
 export type Category = { name: string; color: string };
-export type Station = { station: string; aqi: number | null; dominant: string | null; category: Category | null; last_update?: string };
+export type Station = { station: string; provider?: string; distance_km?: number; pm2_5?: number; time?: string; aqi?: number | null; category?: Category | null };
 export type Now = {
   city: string; time: string; aqi: number | null; category: Category | null; dominant: string | null;
   pm2_5: number | null; pm10: number | null; unit: string; source: string; source_note: string;
@@ -48,6 +48,11 @@ export type Insights = {
   outlook: {
     summary: string; total: number; later: number; ahead: boolean;
     winters: { winter: string; before: number; after: number; worst_date: string; worst_aqi: number }[];
+  } | null;
+  validation: {
+    hours: number; stations: number; real_pm: number; model_pm: number; ratio: number; daily_r: number; from: string; to: string;
+    worst_real: number; worst_model: number; understates_peaks: boolean; peaks: string;
+    summary: string; tracking: string; cleanest: { start_hour: number; pm: number; summary: string } | null;
   } | null;
   limits: { india_summary: string; who_summary: string; seasons: { season: number; days: number; over_india: number; over_who: number }[] } | null;
 };

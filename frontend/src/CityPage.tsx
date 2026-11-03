@@ -56,14 +56,14 @@ function Scale({ aqi }: { aqi: number }) {
 }
 
 function Readings({ now, savedAt }: { now: Now; savedAt: string | null }) {
-  const stations = now.official.stations.filter((s) => s.aqi != null).slice(0, 3);
+  const stations = now.official.stations.slice(0, 4);
   return (
     <section className="readings">
       {savedAt && <p className="flag">Could not refresh. Showing data saved {new Date(savedAt).toLocaleString("en-IN")}.</p>}
       {now.stale && <p className="flag">The live feed did not respond, so this is the last saved reading.</p>}
       {now.aqi != null && <Scale aqi={now.aqi} />}
       <p className="caution">
-        This is a model estimate, and street sensors can read much higher, especially on smoggy nights.
+        This is a model estimate. Real stations can read higher or lower, and the gap can be large on smoggy nights.
         If a station near you shows worse air, follow that.
       </p>
       <h2 className="small">What's in the air</h2>
@@ -81,14 +81,14 @@ function Readings({ now, savedAt }: { now: Now; savedAt: string | null }) {
       {now.shared_grid_with && (
         <p className="fine">The model gives {now.city} and {now.shared_grid_with} the same air data, so they show the same values here.</p>
       )}
-      <h2 className="small">Official stations</h2>
+      <h2 className="small">Measured at stations</h2>
       {now.official.available && stations.length > 0 ? (
         <ul className="stations">
           {stations.map((s) => (
-            <li key={s.station}><span>{s.station}</span><strong>{s.aqi} {s.category?.name}</strong></li>
+            <li key={s.station}><span>{s.station} ({s.provider})</span><strong>PM2.5 {whole(s.pm2_5)} µg/m³{s.time ? `, ${dateLabel(s.time)} ${clock(s.time)}` : ""}</strong></li>
           ))}
         </ul>
-      ) : <p className="fine">{now.official.message ?? "No station has enough data right now."} This page uses the modelled value instead.</p>}
+      ) : <p className="fine">{now.official.message ?? "No station has data right now."} This page uses the modelled value instead.</p>}
     </section>
   );
 }
@@ -312,7 +312,7 @@ function Compared({ data }: { data: History }) {
 }
 
 function Outlook({ data }: { data: Insights }) {
-  const lines = [data.outlook?.summary, data.relief?.summary, data.levers?.summary, data.levers?.rain?.summary, data.limits?.india_summary];
+  const lines = [data.outlook?.summary, data.relief?.summary, data.levers?.summary, data.levers?.rain?.summary, data.limits?.india_summary, data.validation?.summary, data.validation?.peaks, data.validation?.tracking, data.validation?.cleanest?.summary];
   return (
     <section>
       <h2>What happens next</h2>

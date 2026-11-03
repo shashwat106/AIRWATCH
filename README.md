@@ -42,7 +42,7 @@ AirWatch is a scroll-driven site, and every animation is drawn from live data:
 | This season against last | Draws both seasons on the same dates |
 | Day by day | Lands each day of the season with its AQI and likely cause |
 | What happens next | Shows what has cleared the air before, whether that's in the forecast, and how past winters unfolded from this date |
-| How our forecast tested | Shows real test errors against a simple baseline |
+| How our numbers tested | Shows forecast test errors, then how the model compares with real CPCB stations |
 | What to do | Gives guidance for the current category |
 
 Insights are worked out per city from its own record, and a city only gets a claim its data supports:
@@ -79,7 +79,7 @@ npm install
 npm run dev                   # http://localhost:5173
 ```
 
-The app runs without keys, with less data. `FIRMS_MAP_KEY` adds the fire archive and a 14-day fire map, and `DATA_GOV_IN_KEY` adds official station readings. Keys stay in `backend/.env`, which git ignores. The frontend only ever calls our backend.
+The app runs without keys, with less data. `FIRMS_MAP_KEY` adds the fire archive and a 14-day fire map, and `OPENAQ_API_KEY` adds measured station readings, and `DATA_GOV_IN_KEY` is an optional direct CPCB feed. Keys stay in `backend/.env`, which git ignores. The frontend only ever calls our backend.
 
 Useful scripts, all in `backend/scripts/`:
 
@@ -87,6 +87,7 @@ Useful scripts, all in `backend/scripts/`:
 | --- | --- |
 | `backfill.py` | Fetches air and weather history, adding only missing days |
 | `backfill_fires.py` | Fetches the FIRMS archive (needs a key) |
+| `backfill_stations.py` | Fetches measured station data from OpenAQ and compares it with the model (needs a key) |
 | `train.py` | Trains and tests the forecast, then writes `ml/metrics.json` |
 | `snapshot.py` | Saves live forecasts so they can be scored later |
 | `score_live.py` | Scores saved forecasts and picks what each city serves |
@@ -126,14 +127,16 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 | [Open-Meteo Weather and Archive APIs](https://open-meteo.com/) | Wind, humidity, rain, boundary layer | From 4 Aug 2022 |
 | [Open-Meteo Previous Runs API](https://open-meteo.com/en/docs/previous-runs-api) | Archived weather forecasts for honest testing | Last 71 days. No boundary-layer forecasts |
 | [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) | VIIRS fire detections | Last 14 days from three satellites. History from Suomi NPP only: 25 Aug to 4 Nov 2026 (near-real-time), and 1 Oct to 4 Nov in 2024 and 2025 (final processed data) |
-| [CPCB via data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations) | Official station readings | Live, needs a key |
+| [OpenAQ](https://openaq.org/) | Measured PM2.5 from CPCB stations and the AirNow New Delhi monitor, used to check the model and shown beside it | 1 Oct 2026 onwards. CPCB runs about half a day behind |
+| [CPCB via data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations) | Optional direct feed of official readings, used instead of OpenAQ if `DATA_GOV_IN_KEY` is set | Live. Not tested: no key was available |
 | [CPCB AQI method](https://airquality.cpcb.gov.in/ccr_docs/How_AQI_Calculated.pdf) | Breakpoints and rules | Cited in `backend/ml/aqi.py` |
 
 Every upstream call is logged with its URL and parameters in `backend/data/source_log.jsonl`, with keys redacted.
 
 ## Limitations
 
-- **Modelled, not measured, and it can read low.** Headline AQI comes from a global model run through CPCB's method. It is not an official reading. In one spot check at about 3 AM on 4 Nov 2026, the model gave Delhi PM2.5 of 118 µg/m³ while the private sensor network behind aqi.in showed 365 µg/m³. That is one comparison with a network we have not validated, but it means our category may understate real air. The app warns about this next to the AQI and the advice.
+- **Modelled, not measured, and it understates the worst air.** Headline AQI comes from a global model run through CPCB's method. It is not an official reading. Measured against nearby CPCB stations from 1 Oct to 3 Nov 2026, the model's average was within about 25% in 5 of the 6 cities we could check (Chandigarh read about 47% high). But on the worst 10% of hours it read too low in 4 of them: Delhi 98 vs 169 µg/m³ measured, Ghaziabad 109 vs 198, Noida 110 vs 173, Gurugram 115 vs 146. Lucknow and Chandigarh held up. So on the dirtiest days the AQI shown can be a category too clean. The app shows this comparison, and measured readings beside the model.
+- **Station coverage.** OpenAQ returned no recent PM2.5 hours for Ludhiana or Kanpur, so those cities can't be checked. CPCB readings reach OpenAQ about half a day late. The stations are the nearest few to each city point, so they may not represent the whole city.
 - **Source scores are estimates.** They are rules we chose, not calibrated against source-apportionment studies. They are separate scores and don't add up to 100%.
 - **Coarse model.** It can't see a single road or building site, so the vehicle and dust scores rest on broad signals.
 - **Gurugram and Noida share data.** Their air values matched in all 37,267 hours checked, so the two pages show the same numbers. The app says so on both pages.
@@ -151,7 +154,7 @@ Built with **Claude Code** (Anthropic, Opus 5.5), which wrote the code, tests an
 
 ## Deployment
 
-**Backend on Render:** push this repo, then in Render choose New, Blueprint and select the repo. `render.yaml` sets it up. Add `FIRMS_MAP_KEY`, `DATA_GOV_IN_KEY`, and `FRONTEND_ORIGIN` (your Vercel URL, no trailing slash).
+**Backend on Render:** push this repo, then in Render choose New, Blueprint and select the repo. `render.yaml` sets it up. Add `FIRMS_MAP_KEY`, `OPENAQ_API_KEY`, and `FRONTEND_ORIGIN` (your Vercel URL, no trailing slash).
 
 **Frontend on Vercel:** import the repo, set the root directory to `frontend`, and add `VITE_API_URL` (your Render URL, no trailing slash).
 

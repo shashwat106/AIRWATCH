@@ -16,3 +16,5 @@ services:
         sync: false
       - key: DATA_GOV_IN_KEY
         sync: false
+      - key: OPENAQ_API_KEY
+        sync: false

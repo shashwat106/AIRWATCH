@@ -37,6 +37,7 @@ export function Specks({ data }: Props) {
   const steps = useRef<(HTMLDivElement | null)[]>([]);
   const state = useRef({ specks: 0, dark: false });
   const pm = Math.round(now.pollutants.find((p) => p.id === "pm2_5")?.value ?? now.pm2_5 ?? 0);
+  const measured = now.official.stations[0];
   const specks = useMemo(() => Array.from({ length: MAX_SPECKS }, (_, i) => ({
     x: (i * 0.6180339) % 1, y: (i * 0.7548776) % 1, r: 5 + ((i * 7) % 5) * 1.6, phase: i * 1.7, speed: 0.4 + ((i * 13) % 10) / 12,
   })), []);
@@ -120,13 +121,14 @@ export function Specks({ data }: Props) {
         </div>
         <div className="s-step" ref={(e) => { steps.current[3] = e; }}>
           <h2>{pm} is {now.city} over the last 24 hours.</h2>
-          <p>A model estimate. Street sensors can read much higher.</p>
+          <p>A model estimate. Real stations can read higher or lower.</p>
         </div>
         <div className="s-step s-hero" ref={(e) => { steps.current[4] = e; }}>
           <p className="s-when">Right now, 24-hour average</p>
           <p className="s-aqi"><span ref={aqiNumber}>0</span><small>AQI</small></p>
           <p className="s-cat">{now.category?.name ?? "AQI not available"}</p>
           {now.dominant && <p>Driven mostly by {now.dominant}. CPCB scale, modelled data.</p>}
+          {measured?.time && <p>Measured at {measured.station} ({measured.provider}): PM2.5 {whole(measured.pm2_5)} µg/m³, {dateLabel(measured.time)} {measured.time.slice(11, 16)} IST.</p>}
         </div>
       </div>
     </section>
@@ -225,7 +227,7 @@ export function Today({ data }: Props) {
           <div ref={finale} className="s-over">
             <h2>{best ? `Best time outside ${tomorrow ? "tomorrow" : "today"}: ${hourLabel(best.start)} to ${hourLabel(best.end)}` : "No clear best time today"}</h2>
             {best && <p className="s-big">About {best.mean_index} on the hourly index, {best.category?.name}.</p>}
-            {forecast.timing && <p className="s-reason">{forecast.timing.summary}</p>}
+            {forecast.timing && <p className="s-reason">{forecast.timing.summary} {data.insights.validation?.cleanest?.summary}</p>}
           </div>
         </div>
         <div className="s-skyline" aria-label="Forecast by hour" role="img">
@@ -601,27 +603,45 @@ export function Next({ data }: Props) {
 /** Chapter 8. The forecast's real test result, with what it was measured against. */
 export function Trust({ data }: Props) {
   const { forecast, now } = data;
+  const check = data.insights.validation;
   const section = useRef<HTMLElement>(null);
   const a = useRef<HTMLElement>(null);
   const b = useRef<HTMLElement>(null);
+  const c = useRef<HTMLElement>(null);
+  const d = useRef<HTMLElement>(null);
   const m = forecast.metrics;
   const worst = Math.max(m.ours?.mae ?? 1, m.persistence?.mae ?? 1);
+  const most = Math.max(check?.worst_real ?? 1, check?.worst_model ?? 1);
   useProgress(section, (p) => {
-    const t = span(p, 0.1, 0.8);
+    const t = span(p, 0.08, 0.45);
+    const u = span(p, 0.5, 0.85);
     if (a.current) a.current.style.transform = `scaleX(${((m.ours?.mae ?? 0) / worst) * t})`;
     if (b.current) b.current.style.transform = `scaleX(${((m.persistence?.mae ?? 0) / worst) * t})`;
+    if (c.current) c.current.style.transform = `scaleX(${((check?.worst_real ?? 0) / most) * u})`;
+    if (d.current) d.current.style.transform = `scaleX(${((check?.worst_model ?? 0) / most) * u})`;
   });
   if (!m.ours || !m.persistence || !m.test_period) return null;
   return (
-    <section ref={section} className="chapter" style={{ height: "180vh" }}>
+    <section ref={section} className="chapter" style={{ height: "260vh" }}>
       <div className="stick s-trust">
         <div className="s-wide">
-          <h2>How our forecast tested</h2>
+          <h2>How our numbers tested</h2>
           <p>Average error for {now.city}, {dateLabel(m.test_period[0])} to {dateLabel(m.test_period[1])}, measured against Open-Meteo's past values. Shorter is better.</p>
           <div className="s-compare">
             <span>AirWatch model</span><div className="s-track"><i ref={a} /></div><strong>{m.ours.mae} µg/m³</strong>
             <span>Assuming no change</span><div className="s-track"><i ref={b} className="s-second" /></div><strong>{m.persistence.mae} µg/m³</strong>
           </div>
+          {check && (
+            <>
+              <h3 className="s-subhead">Against real CPCB stations</h3>
+              <p>{check.summary} {check.peaks}</p>
+              <div className="s-compare">
+                <span>Worst hours, measured</span><div className="s-track"><i ref={c} className="s-second" /></div><strong>{check.worst_real} µg/m³</strong>
+                <span>Same hours, model</span><div className="s-track"><i ref={d} /></div><strong>{check.worst_model} µg/m³</strong>
+              </div>
+              <p className="s-fine">{check.tracking} PM2.5, {dateLabel(check.from)} to {dateLabel(check.to)}, {check.hours} hours, {check.stations} nearby stations, via OpenAQ.</p>
+            </>
+          )}
         </div>
       </div>
     </section>

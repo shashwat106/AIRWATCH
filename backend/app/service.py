@@ -12,12 +12,13 @@ import pandas as pd
 from ml import forecast as fc
 from ml import history as hist
 from ml import insights as ins
+from ml import validation as val
 from ml.aqi import COLUMNS, LABELS, aqi_series, category, running_means, sub_index
 from ml.sources import compass, mean_wind, score_hour, top_cause
 
 from . import fetchers as f
 from .advice import ADVICE, DISCLAIMER
-from .config import AQ_EARLIEST, CITIES, DATA_GOV_IN_KEY, FIRMS_MAP_KEY, HISTORY_DIR, City
+from .config import AQ_EARLIEST, CITIES, DATA_GOV_IN_KEY, FIRMS_MAP_KEY, HISTORY_DIR, OPENAQ_API_KEY, City
 
 MODEL_SOURCE = "Open-Meteo Air Quality API (CAMS global model), AQI by CPCB method"
 SHARED_GRID = {"gurugram": "Noida", "noida": "Gurugram"}
@@ -104,9 +105,30 @@ def official_stations(frame: pd.DataFrame) -> list[dict]:
     return sorted(out, key=lambda s: (s["aqi"] is None, -(s["aqi"] or 0)))
 
 
+def stored_stations(city_id: str) -> pd.DataFrame | None:
+    path = f.history_path("station", city_id)
+    return pd.read_parquet(path) if path.exists() else None
+
+
+async def openaq_stations(city: City) -> dict:
+    """Measured station readings through OpenAQ, newest first."""
+    table = stored_stations(city.id)
+    none = {"available": False, "message": "No station readings for this city right now.", "stations": []}
+    if table is None or not OPENAQ_API_KEY:
+        return none
+    ids = table.drop_duplicates("location")[["location", "sensor", "station", "provider", "distance_km"]]
+    try:
+        res = await f.station_latest(city, ids)
+    except Exception:
+        return none
+    rows = res.df.sort_values("time", ascending=False).to_dict("records")
+    return {"available": True, "message": None, "stations": rows, "stale": res.stale,
+            "source": "Measured readings via OpenAQ, from CPCB and AirNow monitors"}
+
+
 async def official(city: City) -> dict:
     if not DATA_GOV_IN_KEY:
-        return {"available": False, "message": "Official station readings aren't connected yet.", "stations": []}
+        return await openaq_stations(city)
     try:
         res = await f.cpcb_stations(city)
     except Exception:
@@ -337,6 +359,16 @@ async def city_history(city: City) -> dict:
     })
 
 
+def validation_for(city: City, air: pd.DataFrame) -> dict | None:
+    table = stored_stations(city.id)
+    if table is None:
+        return None
+    result = val.compare(table, air["pm2_5"], city.name)
+    if result:
+        result["cleanest"] = val.cleanest_window(table)
+    return result
+
+
 async def city_insights(city: City) -> dict:
     air, wx, meta = await frames(city)
     at = current_hour(air)
@@ -347,6 +379,7 @@ async def city_insights(city: City) -> dict:
         "city": city.name, "levers": ins.weather_levers(history_air, history_wx),
         "relief": ins.relief_ahead(wx, at), "outlook": ins.winter_outlook(table["aqi"], last_full, city.name),
         "limits": ins.days_over_limit(table, last_full, city.name),
+        "validation": validation_for(city, history_air),
         "source": "Patterns from Open-Meteo model data since Aug 2022. Forecast from Open-Meteo weather.", **meta,
     })
 

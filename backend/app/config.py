@@ -19,6 +19,7 @@ for _d in (CACHE_DIR, HISTORY_DIR, SNAPSHOT_DIR):
 load_dotenv(BACKEND_DIR / ".env")
 FIRMS_MAP_KEY = os.getenv("FIRMS_MAP_KEY", "").strip()
 DATA_GOV_IN_KEY = os.getenv("DATA_GOV_IN_KEY", "").strip()
+OPENAQ_API_KEY = os.getenv("OPENAQ_API_KEY", "").strip()
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
 TZ = "Asia/Kolkata"

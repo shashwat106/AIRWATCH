@@ -10,7 +10,7 @@ import httpx
 import pandas as pd
 
 from .cache import Cached, cached_df
-from .config import (DATA_GOV_IN_KEY, FIRE_BBOX, FIRMS_MAP_KEY, HISTORY_DIR, SNAPSHOT_DIR,
+from .config import (DATA_GOV_IN_KEY, FIRE_BBOX, FIRMS_MAP_KEY, HISTORY_DIR, OPENAQ_API_KEY, SNAPSHOT_DIR,
                      SOURCE_LOG, TZ, City)
 
 log = logging.getLogger("airwatch.fetch")
@@ -20,6 +20,7 @@ WX_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 WX_PREVIOUS_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 FIRMS_PUBLIC = "https://firms.modaps.eosdis.nasa.gov/data/active_fire"
 FIRMS_AREA = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+OPENAQ_URL = "https://api.openaq.org/v3"
 CPCB_URL = "https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69"
 
 AQ_VARS = "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust"
@@ -44,8 +45,8 @@ def _log(url: str, params: dict | None, status: int | str) -> None:
         fh.write(json.dumps(rec) + "\n")
 
 
-async def _get(url: str, params: dict | None = None, timeout: float = 45.0) -> httpx.Response:
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+async def _get(url: str, params: dict | None = None, timeout: float = 45.0, headers: dict | None = None) -> httpx.Response:
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
         try:
             resp = await client.get(url, params=params)
         except httpx.HTTPError as exc:
@@ -174,6 +175,25 @@ async def cpcb_stations(city: City) -> Cached:
         records = (await _get(CPCB_URL, params)).json().get("records", [])
         return pd.DataFrame(records).astype(str)
     return await cached_df(f"cpcb:{city.id}", 1800, go)
+
+
+async def station_latest(city: City, stations: pd.DataFrame) -> Cached:
+    """Latest PM2.5 from the stations stored for this city, through OpenAQ. CPCB's feed there runs
+    about half a day behind, so each reading carries its own time."""
+    async def go():
+        if not OPENAQ_API_KEY:
+            raise RuntimeError("OPENAQ_API_KEY not set")
+        rows = []
+        for row in stations.itertuples():
+            resp = await _get(f"{OPENAQ_URL}/locations/{row.location}/latest", timeout=30, headers={"X-API-Key": OPENAQ_API_KEY})
+            for item in resp.json().get("results", []):
+                if item["sensorsId"] == row.sensor and 0 < item["value"] < 1000:
+                    rows.append({"station": row.station, "provider": row.provider, "distance_km": row.distance_km,
+                                 "pm2_5": item["value"], "time": item["datetime"]["local"][:16]})
+        if not rows:
+            raise RuntimeError("no station readings")
+        return pd.DataFrame(rows)
+    return await cached_df(f"stations:{city.id}", 1800, go)
 
 
 def history_path(kind: str, city_id: str):

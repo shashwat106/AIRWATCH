@@ -202,6 +202,7 @@ class Insights(BaseModel):
     relief: dict[str, Any] | None
     outlook: dict[str, Any] | None
     limits: dict[str, Any] | None
+    validation: dict[str, Any] | None
     source: str
     fetched_at: str
     stale: bool
