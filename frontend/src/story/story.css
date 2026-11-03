@@ -147,3 +147,13 @@
 .s-over h2 { font-size: clamp(2rem, 3.6vw, 3.4rem); }
 .s-over .s-big { font-size: clamp(1.15rem, 1.9vw, 1.7rem) !important; margin-top: .4rem; }
 .s-over .s-reason { max-width: none; margin-top: .4rem; font-size: 1.1rem !important; }
+
+/* Four things to know */
+.s-key-points { background: var(--ink); color: var(--paper); }
+.s-points-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 2rem 2.5rem; margin-top: 2.5rem; }
+.s-points-grid > div { padding-top: .9rem; border-top: 4px solid #ff9900; }
+.s-points-grid b { display: block; font: 800 clamp(2.4rem, 4vw, 3.6rem)/1.05 var(--display); font-stretch: 112%; }
+.s-points-grid h3 { margin: .5rem 0 .25rem; font-size: clamp(1.25rem, 1.7vw, 1.6rem); }
+.s-points-grid p { font-size: 1.05rem; }
+.s-key-points .s-fine { color: #c3cac3; margin-top: 2rem; }
+.s-jump { padding: 0; border: 0; background: none; color: inherit; font: 700 1rem var(--body); text-decoration: underline; }

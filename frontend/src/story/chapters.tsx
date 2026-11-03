@@ -133,6 +133,45 @@ export function Specks({ data }: Props) {
   );
 }
 
+/** The main insights straight after the AQI, each one a figure and a sentence. */
+export function KeyPoints({ data }: Props) {
+  const { insights, forecast, now } = data;
+  const { outlook, relief, limits } = insights;
+  const section = useRef<HTMLElement>(null);
+  const items = useRef<(HTMLDivElement | null)[]>([]);
+  const best = forecast.best_time;
+  const season = limits?.seasons[limits.seasons.length - 1];
+  const helpful = relief?.days.find((d) => d.relief);
+  const points = [
+    outlook && { figure: outlook.total >= 5 ? `${outlook.later} of ${outlook.total}` : String(outlook.total), title: outlook.ahead ? "The worst is usually still ahead" : "What past winters did", text: outlook.summary },
+    relief && { figure: helpful ? dateLabel(helpful.date) : "No relief", title: helpful ? "When the air could clear" : "Don't expect a clear-out", text: relief.summary },
+    forecast.timing && best && { figure: `${forecast.timing.ratio}×`, title: `Go out ${hourLabel(best.start)} to ${hourLabel(best.end)}`, text: forecast.timing.summary },
+    limits && season && { figure: `${season.over_india} of ${season.days}`, title: "Days over India's standard", text: limits.india_summary.replace(" was over it on ", " was over 60 µg/m³ on ") },
+  ].filter(Boolean) as { figure: string; title: string; text: string }[];
+  useProgress(section, (p) => {
+    items.current.forEach((item, i) => show(item, span(p, 0.04 + i * 0.16, 0.18 + i * 0.16)));
+  });
+  return (
+    <section ref={section} className="chapter" style={{ height: "230vh" }}>
+      <div className="stick s-key-points">
+        <div className="s-wide">
+          <h2>{["One thing", "Two things", "Three things", "Four things"][Math.max(points.length - 1, 0)]} to know about {now.city}</h2>
+          <div className="s-points-grid">
+            {points.map((point, i) => (
+              <div key={point.title} ref={(e) => { items.current[i] = e; }}>
+                <b>{point.figure}</b>
+                <h3>{point.title}</h3>
+                <p>{point.text}</p>
+              </div>
+            ))}
+          </div>
+          <p className="s-fine">From modelled data since Aug 2022. Past patterns, not guarantees.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /** Chapter 2. The next 24 hours rise hour by hour as a skyline. */
 export function Today({ data }: Props) {
   const { forecast } = data;
@@ -493,7 +532,7 @@ export function Next({ data }: Props) {
     });
   });
   return (
-    <section ref={section} className="chapter" style={{ height: "460vh" }}>
+    <section ref={section} id="insights" className="chapter" style={{ height: "460vh" }}>
       <div className="stick s-next">
         <div className="s-stage" ref={(e) => { stages.current[0] = e; }}>
           <h2>What would clear the air</h2>
@@ -559,43 +598,30 @@ export function Next({ data }: Props) {
   );
 }
 
-/** Chapter 8. How far to trust all of this, using the real test results. */
+/** Chapter 8. The forecast's real test result, with what it was measured against. */
 export function Trust({ data }: Props) {
   const { forecast, now } = data;
   const section = useRef<HTMLElement>(null);
   const a = useRef<HTMLElement>(null);
   const b = useRef<HTMLElement>(null);
-  const lines = useRef<(HTMLLIElement | null)[]>([]);
   const m = forecast.metrics;
   const worst = Math.max(m.ours?.mae ?? 1, m.persistence?.mae ?? 1);
   useProgress(section, (p) => {
-    const t = span(p, 0.05, 0.4);
+    const t = span(p, 0.1, 0.8);
     if (a.current) a.current.style.transform = `scaleX(${((m.ours?.mae ?? 0) / worst) * t})`;
     if (b.current) b.current.style.transform = `scaleX(${((m.persistence?.mae ?? 0) / worst) * t})`;
-    lines.current.forEach((line, i) => show(line, span(p, 0.4 + i * 0.13, 0.5 + i * 0.13)));
   });
+  if (!m.ours || !m.persistence || !m.test_period) return null;
   return (
-    <section ref={section} className="chapter" style={{ height: "260vh" }}>
+    <section ref={section} className="chapter" style={{ height: "180vh" }}>
       <div className="stick s-trust">
         <div className="s-wide">
-          <h2>How far to trust this</h2>
-          {m.ours && m.persistence && m.test_period && (
-            <>
-              <p>Average forecast error for {now.city}, {dateLabel(m.test_period[0])} to {dateLabel(m.test_period[1])}. Shorter is better.</p>
-              <div className="s-compare">
-                <span>AirWatch model</span><div className="s-track"><i ref={a} /></div><strong>{m.ours.mae} µg/m³</strong>
-                <span>Assuming no change</span><div className="s-track"><i ref={b} className="s-second" /></div><strong>{m.persistence.mae} µg/m³</strong>
-              </div>
-            </>
-          )}
-          <ul className="s-points">
-            <li ref={(e) => { lines.current[0] = e; }}>Those errors are measured against Open-Meteo's own past values, not real stations.</li>
-            <li ref={(e) => { lines.current[1] = e; }}>{forecast.served_reason}</li>
-            <li ref={(e) => { lines.current[2] = e; }}>{now.official.available ? "Official station readings are shown on the details page." : `${now.official.message} All numbers here are modelled.`}</li>
-            <li ref={(e) => { lines.current[3] = e; }}>
-              {now.shared_grid_with ? `The model gives ${now.city} and ${now.shared_grid_with} the same air data. ` : ""}Street sensors can read much higher than this model.
-            </li>
-          </ul>
+          <h2>How our forecast tested</h2>
+          <p>Average error for {now.city}, {dateLabel(m.test_period[0])} to {dateLabel(m.test_period[1])}, measured against Open-Meteo's past values. Shorter is better.</p>
+          <div className="s-compare">
+            <span>AirWatch model</span><div className="s-track"><i ref={a} /></div><strong>{m.ours.mae} µg/m³</strong>
+            <span>Assuming no change</span><div className="s-track"><i ref={b} className="s-second" /></div><strong>{m.persistence.mae} µg/m³</strong>
+          </div>
         </div>
       </div>
     </section>

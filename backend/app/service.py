@@ -106,7 +106,7 @@ def official_stations(frame: pd.DataFrame) -> list[dict]:
 
 async def official(city: City) -> dict:
     if not DATA_GOV_IN_KEY:
-        return {"available": False, "message": "Official feed unavailable: no data.gov.in key set.", "stations": []}
+        return {"available": False, "message": "Official station readings aren't connected yet.", "stations": []}
     try:
         res = await f.cpcb_stations(city)
     except Exception:

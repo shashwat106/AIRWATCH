@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Forecast, History, Insights, load, Now, Sources } from "../api";
 import { Problem } from "../parts";
-import { Advice, Calendar, Causes, Fires, Next, Season, Specks, Today, Trust } from "./chapters";
+import { Advice, Calendar, Causes, Fires, KeyPoints, Next, Season, Specks, Today, Trust } from "./chapters";
 import { clamp } from "./scroll";
 
 export const CITY_NAMES: Record<string, string> = {
@@ -46,6 +46,7 @@ function TopBar({ id }: { id: string }) {
           {Object.entries(CITY_NAMES).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
         </select>
       </label>
+      <button type="button" className="s-jump" onClick={() => document.getElementById("insights")?.scrollIntoView()}>Insights</button>
       <a href="#/map">Map</a>
       <a href={`#/city/${id}`}>Full details</a>
       <i style={{ transform: `scaleX(${progress})` }} />
@@ -78,6 +79,7 @@ export function Story({ id }: { id: string }) {
       {bundle && (
         <main key={id}>
           <Specks data={bundle} />
+          <KeyPoints data={bundle} />
           <Today data={bundle} />
           <Fires data={bundle} />
           <Causes data={bundle} />

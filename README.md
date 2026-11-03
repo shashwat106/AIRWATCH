@@ -35,13 +35,14 @@ AirWatch is a scroll-driven site, and every animation is drawn from live data:
 | Chapter | What scrolling does |
 | --- | --- |
 | Specks | Fills the sky at 1 speck per µg/m³: the WHO guideline, India's standard, then the city's real level, ending on its AQI |
+| Four things to know | Shows the main insights right after the AQI |
 | Today | Raises a skyline of the next 24 hours, then brackets the best window |
 | Fires | Moves the map towards the fires as real detections appear day by day |
 | Why | Fills each likely cause to its score, with its reason |
 | This season against last | Draws both seasons on the same dates |
 | Day by day | Lands each day of the season with its AQI and likely cause |
 | What happens next | Shows what has cleared the air before, whether that's in the forecast, and how past winters unfolded from this date |
-| How far to trust this | Shows real test errors and the limits of the data |
+| How our forecast tested | Shows real test errors against a simple baseline |
 | What to do | Gives guidance for the current category |
 
 Insights are worked out per city from its own record, and a city only gets a claim its data supports:
