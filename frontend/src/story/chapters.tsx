@@ -343,7 +343,8 @@ export function Season({ data }: Props) {
   const summary = useRef<HTMLDivElement>(null);
   const rows = history.season_chart;
   const W = 1000;
-  const H = 310;
+  const H = 270;
+  const GUTTER = 185; // band labels sit here, clear of the lines
   const top = Math.max(430, ...rows.flatMap((r) => [r.this_season ?? 0, r.last_season ?? 0]) ) * 1.04;
   const x = (i: number) => (i / Math.max(rows.length - 1, 1)) * W;
   const y = (v: number) => H - (v / top) * H;
@@ -370,19 +371,19 @@ export function Season({ data }: Props) {
     if (label.current && r) label.current.textContent = `${r.label}: ${r.this_season ?? "no data"} this season, ${r.last_season ?? "no data"} last season`;
     show(summary.current, span(p, 0.84, 0.92));
   });
-  const bands: [number, string][] = [[100, "Good and Satisfactory end"], [200, "Moderately Polluted ends"], [300, "Poor ends"], [400, "Very Poor ends"]];
+  const bands: [number, string][] = [[100, "Satisfactory ends"], [200, "Moderately Polluted ends"], [300, "Poor ends"], [400, "Very Poor ends"]];
   return (
     <section ref={section} className="chapter" style={{ height: "340vh" }}>
       <div className="stick s-season">
         <div className="s-wide">
           <h2>This season against last</h2>
           <p className="s-big"><span ref={label}>…</span></p>
-          <svg viewBox={`-4 -8 ${W + 8} ${H + 16}`} preserveAspectRatio="xMinYMid meet" role="img" aria-label="Daily AQI this season and last season on the same dates">
+          <svg viewBox={`-4 -8 ${W + GUTTER} ${H + 16}`} preserveAspectRatio="xMinYMid meet" role="img" aria-label="Daily AQI this season and last season on the same dates">
             <defs><clipPath id="s-reveal"><rect ref={clip} x="-4" y="-8" width="0" height={H + 16} /></clipPath></defs>
             {bands.map(([v, name]) => (
               <g key={v}>
                 <line x1="0" x2={W} y1={y(v)} y2={y(v)} stroke="#C3CAC3" />
-                <text x={W} y={y(v) - 5} fontSize="13" textAnchor="end" fill="#4A5A66" stroke="#F5F6F1" strokeWidth="4" paintOrder="stroke">{v}: {name}</text>
+                <text x={W + 10} y={y(v) + 4} fontSize="13" fill="#4A5A66">{v}: {name}</text>
               </g>
             ))}
             <g clipPath="url(#s-reveal)">
