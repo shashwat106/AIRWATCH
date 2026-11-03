@@ -4,7 +4,7 @@ from __future__ import annotations
 import io
 import json
 import logging
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import httpx
 import pandas as pd
@@ -112,24 +112,43 @@ def _clean_fires(df: pd.DataFrame) -> pd.DataFrame:
     return df[keep].reset_index(drop=True)
 
 
-async def fires_recent() -> Cached:
-    """Fires for roughly the last 7 days from the three VIIRS satellites.
+async def _fires_keyed() -> pd.DataFrame:
+    """Last 15 days from the keyed area API, in the 5-day chunks it allows."""
+    bbox = ",".join(str(v) for v in FIRE_BBOX)
+    today = pd.Timestamp.now(tz="Asia/Kolkata").date()
+    frames = []
+    for src in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"):
+        for back in (14, 9, 4):
+            start = (today - timedelta(days=back)).isoformat()
+            resp = await _get(f"{FIRMS_AREA}/{FIRMS_MAP_KEY}/{src}/{bbox}/5/{start}", timeout=90)
+            if not resp.text.startswith("latitude"):
+                raise RuntimeError(f"FIRMS said: {_redact(resp.text[:120])}")
+            frames.append(pd.read_csv(io.StringIO(resp.text)))
+    return pd.concat(frames, ignore_index=True)
 
-    Uses the keyed area API when FIRMS_MAP_KEY is set, otherwise NASA's public no-key CSVs.
-    Satellites see the same fire on overlapping passes, so counts are detections, not unique fires.
+
+async def _fires_public() -> pd.DataFrame:
+    frames = []
+    for feed in PUBLIC_FEEDS:
+        resp = await _get(f"{FIRMS_PUBLIC}/{feed}", timeout=90)
+        frames.append(pd.read_csv(io.StringIO(resp.text)))
+    return pd.concat(frames, ignore_index=True)
+
+
+async def fires_recent() -> Cached:
+    """Recent fires from the three VIIRS satellites.
+
+    Uses the keyed area API (14-day map) when FIRMS_MAP_KEY is set and working, otherwise NASA's
+    public no-key CSVs (7 days). Satellites see the same fire on overlapping passes, so counts are
+    detections, not unique fires.
     """
     async def go():
-        frames = []
         if FIRMS_MAP_KEY:
-            bbox = ",".join(str(v) for v in FIRE_BBOX)
-            for src in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"):
-                resp = await _get(f"{FIRMS_AREA}/{FIRMS_MAP_KEY}/{src}/{bbox}/5", timeout=90)
-                frames.append(pd.read_csv(io.StringIO(resp.text)))
-        else:
-            for feed in PUBLIC_FEEDS:
-                resp = await _get(f"{FIRMS_PUBLIC}/{feed}", timeout=90)
-                frames.append(pd.read_csv(io.StringIO(resp.text)))
-        return _clean_fires(pd.concat(frames, ignore_index=True))
+            try:
+                return _clean_fires(await _fires_keyed())
+            except RuntimeError as exc:
+                log.warning("keyed FIRMS failed, using public feed: %s", exc)
+        return _clean_fires(await _fires_public())
     return await cached_df("fires_recent", 3600, go)
 
 

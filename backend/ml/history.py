@@ -180,10 +180,11 @@ def fire_link(table: pd.DataFrame, fires: pd.Series | None, start: date, end: da
     if fires is None:
         return {"available": False, "reason": "Needs the FIRMS fire archive, which needs a FIRMS key."}
     pm = table["pm2_5"].loc[pd.Timestamp(start):pd.Timestamp(end)]
-    results = []
+    results, pairs = [], {}
     for lag in (0, 1, 2):
         paired = pd.DataFrame({"pm": pm, "fires": fires.reindex(pm.index - pd.Timedelta(days=1 + lag)).values},
                               index=pm.index).dropna()
+        pairs[lag] = paired
         if len(paired) < MIN_CORRELATION_DAYS or paired.fires.std() == 0 or paired.pm.std() == 0:
             results.append({"lag_days": lag, "r": None, "n": int(len(paired))})
         else:
@@ -195,7 +196,8 @@ def fire_link(table: pd.DataFrame, fires: pd.Series | None, start: date, end: da
     words = (f"The link between upwind fires and next-day PM2.5 this season is {correlation_strength(best['r'])} "
              f"(r = {best['r']}, {best['n']} days, fires {best['lag_days']} day(s) earlier). "
              "Correlation does not prove cause: fires and calm weather often arrive together.")
-    return {"available": True, "lags": results, "best": best, "summary": words}
+    points = [{"fires": int(r.fires), "pm2_5": round(float(r.pm), 1)} for r in pairs[best["lag_days"]].itertuples()]
+    return {"available": True, "lags": results, "best": best, "summary": words, "points": points}
 
 
 def worst_days(table: pd.DataFrame, start: date, end: date, n: int = 3) -> list[dict]:

@@ -157,7 +157,7 @@ async def city_forecast(city: City) -> dict:
     return clean({
         "city": city.name, "issued": at.isoformat(), "served": served, "served_reason": reason, "hours": rows,
         "best_time": best, "best_time_note": "Ranked on hourly PM2.5 and PM10, not the 24-hour official AQI.",
-        "metrics": metrics, "source": "Open-Meteo forecast" if served == "open_meteo" else "AirWatch model", **meta,
+        "metrics": metrics, "source": "Open-Meteo" if served == "open_meteo" else "the AirWatch model", **meta,
     })
 
 
@@ -258,7 +258,7 @@ async def map_view(day: date | None) -> dict:
     if fires is None:
         fires_note = "Fire data unavailable right now."
     elif not covered:
-        fires_note = "No fire data for this date: the keyless NASA feed covers only the last 7 days."
+        fires_note = "No fire data for this date: the feed in use does not reach this far back."
     elif not points and day == today:
         fires_note = "No satellite detections yet today. This can mean no pass has happened yet, not that there are no fires."
     cities = []

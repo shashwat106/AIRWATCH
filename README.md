@@ -1,0 +1,130 @@
+# AirWatch
+
+**Neural Storm 2026, Green Planet track. Problem statement GP-01: Air Quality Monitoring & Source Attribution.**
+
+**Team:** _[team name]_. **Members:** _[member names]_
+
+**Live app:** _[Vercel URL]_ **API:** _[Render URL]_
+
+AirWatch tells people in North India what the air is like in their city, what it will do in the next 24 hours, when the cleanest time to go out is, what is most likely causing it, and how today compares with the past.
+
+| Map with fires | City page |
+| --- | --- |
+| ![Map showing city AQI, fire detections and wind](docs/screenshots/home-fires.png) | ![City page with AQI, forecast, contributors and comparisons](docs/screenshots/city.png) |
+
+## Problem
+
+Every winter, cities across North India sit under some of the world's worst air. Most apps show a number. They don't say why it's happening, when the air will be better today, or whether this year is really worse than last year. Crop burning, traffic, dust and still weather all get blamed, usually without evidence for that day.
+
+## Solution
+
+For Delhi, Gurugram, Noida, Ghaziabad, Chandigarh, Ludhiana, Lucknow and Kanpur:
+
+- **Now:** AQI by CPCB's method, with its category and the pollutant driving it.
+- **Next 24 hours:** an hourly forecast and the best 2-hour window to go outside.
+- **Why:** a score and a plain-words reason for crop burning, vehicles, dust and weather trapping.
+- **Compared with before:** today against last year and recent weeks, and this season against last, on the same dates.
+- **What to do:** general public guidance for the current category.
+
+A map shows city AQI, satellite fire detections and wind, with a date slider to watch them change.
+
+## Tech stack
+
+- **Backend and all AI/ML (Python):** FastAPI, httpx, pandas, pyarrow, LightGBM, pydantic, pytest
+- **Frontend:** React, Vite, TypeScript, MapLibre GL with OpenFreeMap tiles, Recharts, installable PWA
+- **Caching:** in-memory TTL plus parquet on disk, with the last good copy served and labelled if an upstream fails
+
+## Setup and run
+
+You need Python 3.11+ and Node 20+.
+
+```bash
+cd backend
+python -m venv .venv
+.venv/Scripts/activate        # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # then add your keys
+uvicorn app.main:app --port 8000
+```
+
+```bash
+cd frontend
+npm install
+npm run dev                   # http://localhost:5173
+```
+
+The app runs without keys, with less data. `FIRMS_MAP_KEY` adds the fire archive and a 14-day fire map, and `DATA_GOV_IN_KEY` adds official station readings. Keys stay in `backend/.env`, which git ignores. The frontend only ever calls our backend.
+
+Useful scripts, all in `backend/scripts/`:
+
+| Script | What it does |
+| --- | --- |
+| `backfill.py` | Fetches air and weather history, adding only missing days |
+| `backfill_fires.py` | Fetches the FIRMS archive (needs a key) |
+| `train.py` | Trains and tests the forecast, then writes `ml/metrics.json` |
+| `snapshot.py` | Saves live forecasts so they can be scored later |
+| `score_live.py` | Scores saved forecasts and picks what each city serves |
+
+Run the tests with `cd backend && pytest`.
+
+## Performance
+
+Test: trained on 60 days and tested on the 7 days after them (28 Oct to 3 Nov 2026). PM2.5 in µg/m³, forecast 1 to 24 hours ahead, 576 hourly forecasts per city. Lower is better. Weather inputs are real archived forecasts, not what actually happened.
+
+| City | AirWatch MAE | AirWatch RMSE | No-change MAE | No-change RMSE | Same hour yesterday MAE | Same hour yesterday RMSE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Delhi | **20.80** | **26.12** | 27.31 | 36.03 | 26.26 | 34.69 |
+| Gurugram | **21.76** | **27.47** | 27.35 | 34.31 | 27.98 | 38.34 |
+| Noida | **22.11** | **28.51** | 27.35 | 34.31 | 27.98 | 38.34 |
+| Ghaziabad | **21.71** | **26.65** | 27.19 | 36.35 | 27.55 | 35.60 |
+| Chandigarh | **13.52** | **17.58** | 16.89 | 20.62 | 15.55 | 18.70 |
+| Ludhiana | **22.34** | **27.37** | 27.34 | 33.19 | 24.81 | 32.34 |
+| Lucknow | **16.40** | **23.77** | 19.02 | 28.52 | 23.51 | 31.47 |
+| Kanpur | **16.27** | 25.27 | 17.11 | **25.10** | 22.55 | 30.14 |
+
+AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur, assuming no change has a slightly lower RMSE.
+
+**These are not scores against Open-Meteo's forecast, and not scores against real air.**
+
+- The "truth" here is Open-Meteo's own past series, which comes from a global model, not from stations.
+- Open-Meteo keeps no old air-quality forecasts (`pm2_5_previous_day1` returned only nulls), so its forecast can't be tested on past days: it would be compared with itself. That's why the table uses simple baselines.
+- To compare fairly, we save live forecasts from both and score them once the hours have passed. Each city shows Open-Meteo's forecast unless ours has won on at least 12 live hours. Results are in `backend/ml/metrics.json`, and each city page says which forecast it's using and why.
+- The serving models are refitted on the latest 60 days, so they aren't the exact fits scored above.
+- The test didn't use the fire feature, because training on it needs the fire archive.
+
+## Data sources
+
+| Source | Used for | Dates |
+| --- | --- | --- |
+| [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) | PM2.5, PM10, NO2, CO, SO2, O3, dust | From 4 Aug 2022, the first day with values for all 8 cities, checked live |
+| [Open-Meteo Weather and Archive APIs](https://open-meteo.com/) | Wind, humidity, rain, boundary layer | From 4 Aug 2022 |
+| [Open-Meteo Previous Runs API](https://open-meteo.com/en/docs/previous-runs-api) | Archived weather forecasts for honest testing | Last 71 days. No boundary-layer forecasts |
+| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) | VIIRS fire detections | Last 7 days from the public files, or last 14 and the archive with a key |
+| [CPCB via data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations) | Official station readings | Live, needs a key |
+| [CPCB AQI method](https://airquality.cpcb.gov.in/ccr_docs/How_AQI_Calculated.pdf) | Breakpoints and rules | Cited in `backend/ml/aqi.py` |
+
+Every upstream call is logged with its URL and parameters in `backend/data/source_log.jsonl`, with keys redacted.
+
+## Limitations
+
+- **Modelled, not measured.** Headline AQI comes from a global model run through CPCB's method. It can differ a lot from nearby stations and is not an official reading.
+- **Source scores are estimates.** They are rules we chose, not calibrated against source-apportionment studies. They are separate scores and don't add up to 100%.
+- **Coarse model.** It can't see a single road or building site, so the vehicle and dust scores rest on broad signals.
+- **Gurugram and Noida share data.** Their air values matched in all 37,267 hours checked, so the two pages show the same numbers. The app says so on both pages.
+- **Seams in the past series.** It's stitched from separate model runs, and many of the largest hour-to-hour jumps fall near run times (around 05:30 and 17:30 IST).
+- **History starts in August 2022**, so there are only a few seasons to compare.
+- **Fire counts are detections.** One fire can be seen on several satellite passes, and cloud or thick smoke can hide fires. Zero detections today can just mean no satellite has passed yet.
+- **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
+- **Advice is general guidance**, not medical advice.
+
+## AI tools disclosure
+
+Built with **Claude Code** (Anthropic, Opus 5.5), which wrote the code, tests and this README under the team's direction. Skills used: `frontend-design` for visual design and `dataviz` for charts and palette validation. _[Add any other tools your team used.]_
+
+## Deployment
+
+**Backend on Render:** push this repo, then in Render choose New, Blueprint and select the repo. `render.yaml` sets it up. Add `FIRMS_MAP_KEY`, `DATA_GOV_IN_KEY`, and `FRONTEND_ORIGIN` (your Vercel URL, no trailing slash).
+
+**Frontend on Vercel:** import the repo, set the root directory to `frontend`, and add `VITE_API_URL` (your Render URL, no trailing slash).
+
+Render's free tier sleeps when idle, so the first request can take up to a minute. Open the app before a demo. Stored history is in the repo, so re-run `backfill.py` and commit to keep it current.
