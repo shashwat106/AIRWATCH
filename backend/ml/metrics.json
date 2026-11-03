@@ -1,0 +1,215 @@
+{
+  "generated_at": "2026-11-03T21:14:38+00:00",
+  "target": "PM2.5 (ug/m3), hourly, 1-24 h ahead",
+  "truth": "Open-Meteo past series (global model), not station measurements",
+  "cities": {
+    "delhi": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 20.8,
+        "rmse": 26.12,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 27.31,
+        "rmse": 36.03,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 26.26,
+        "rmse": 34.69,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "gurugram": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 21.76,
+        "rmse": 27.47,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 27.35,
+        "rmse": 34.31,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 27.98,
+        "rmse": 38.34,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "noida": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 22.11,
+        "rmse": 28.51,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 27.35,
+        "rmse": 34.31,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 27.98,
+        "rmse": 38.34,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "ghaziabad": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 21.71,
+        "rmse": 26.65,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 27.19,
+        "rmse": 36.35,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 27.55,
+        "rmse": 35.6,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "chandigarh": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 13.52,
+        "rmse": 17.58,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 16.89,
+        "rmse": 20.62,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 15.55,
+        "rmse": 18.7,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "ludhiana": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 22.34,
+        "rmse": 27.37,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 27.34,
+        "rmse": 33.19,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 24.81,
+        "rmse": 32.34,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "lucknow": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 16.4,
+        "rmse": 23.77,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 19.02,
+        "rmse": 28.52,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 23.51,
+        "rmse": 31.47,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    },
+    "kanpur": {
+      "train_period": [
+        "2026-08-29",
+        "2026-10-27"
+      ],
+      "test_period": [
+        "2026-10-28",
+        "2026-11-03"
+      ],
+      "ours": {
+        "mae": 16.27,
+        "rmse": 25.27,
+        "n": 576
+      },
+      "persistence": {
+        "mae": 17.11,
+        "rmse": 25.1,
+        "n": 576
+      },
+      "same_hour_yesterday": {
+        "mae": 22.55,
+        "rmse": 30.14,
+        "n": 576
+      },
+      "uses_fire_feature": false
+    }
+  }
+}

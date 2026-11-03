@@ -17,6 +17,7 @@ log = logging.getLogger("airwatch.fetch")
 AQ_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 WX_URL = "https://api.open-meteo.com/v1/forecast"
 WX_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
+WX_PREVIOUS_URL = "https://previous-runs-api.open-meteo.com/v1/forecast"
 FIRMS_PUBLIC = "https://firms.modaps.eosdis.nasa.gov/data/active_fire"
 FIRMS_AREA = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
 CPCB_URL = "https://api.data.gov.in/resource/3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69"
@@ -72,6 +73,15 @@ async def weather_archive(city: City, start: str, end: str) -> pd.DataFrame:
     params = {"latitude": city.lat, "longitude": city.lon, "hourly": WX_VARS, "timezone": TZ,
               "start_date": start, "end_date": end}
     return _hourly((await _get(WX_ARCHIVE_URL, params, 90)).json())
+
+
+async def weather_previous_runs(city: City, past_days: int = 71) -> pd.DataFrame:
+    """Forecasts as issued about a day ahead. boundary_layer_height has no such archive."""
+    names = ["wind_speed_10m", "wind_direction_10m", "relative_humidity_2m", "precipitation"]
+    params = {"latitude": city.lat, "longitude": city.lon, "timezone": TZ, "past_days": past_days,
+              "forecast_days": 1, "hourly": ",".join(f"{n}_previous_day1" for n in names)}
+    df = _hourly((await _get(WX_PREVIOUS_URL, params, 90)).json())
+    return df.rename(columns={f"{n}_previous_day1": n for n in names})
 
 
 async def air_live(city: City) -> Cached:
