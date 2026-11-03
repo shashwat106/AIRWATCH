@@ -170,7 +170,8 @@ async def measured_check(city: City, aqi: int | None) -> dict | None:
         recent = (await f.station_recent(city, ids)).df
     except Exception:
         return None
-    sources = {f"{provider} stations": rows.groupby("time").pm2_5.mean() for provider, rows in recent.groupby("provider")}
+    sources = {("CPCB stations" if provider == "CPCB" else f"the {provider} monitor"): rows.groupby("time").pm2_5.mean()
+               for provider, rows in recent.groupby("provider")}
     return warn.check(sources, aqi, now_ist())
 
 

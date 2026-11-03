@@ -13,6 +13,8 @@ AirWatch tells people in North India what the air is like in their city, what it
 | ![Specks filling the sky, one per microgram of PM2.5](docs/screenshots/story-specks.png) | ![Skyline of the next 24 hours with the best window bracketed](docs/screenshots/story-best.png) |
 | **Fires appear day by day** | **What each day was about** |
 | ![Map of satellite fire detections over Punjab](docs/screenshots/story-fires.png) | ![Calendar of daily AQI and likely cause](docs/screenshots/story-calendar.png) |
+| **Warning when stations measured worse** | **How our numbers tested** |
+| ![Warning shown under the AQI when stations measured worse air](docs/screenshots/story-warning.png) | ![Forecast error and worst hours against CPCB stations](docs/screenshots/story-trust.png) |
 | **What past winters did next** | **This season against last** |
 | ![Bars showing most days above AQI 300 came after this date](docs/screenshots/story-next.png) | ![Lines comparing this season and last on the same dates](docs/screenshots/story-season.png) |
 
@@ -87,7 +89,9 @@ Useful scripts, all in `backend/scripts/`:
 | --- | --- |
 | `backfill.py` | Fetches air and weather history, adding only missing days |
 | `backfill_fires.py` | Fetches the FIRMS archive (needs a key) |
-| `backfill_stations.py` | Fetches measured station data from OpenAQ and compares it with the model (needs a key) |
+| `backfill_stations.py` | Fetches a year of measured station data from OpenAQ and compares it with the model (needs a key) |
+| `evaluate_warning.py` | Replays the station warning on past days and tests the recent-gap correction |
+| `evaluate_corrections.py` | Tests fitted corrections on days they never saw |
 | `train.py` | Trains and tests the forecast, then writes `ml/metrics.json` |
 | `snapshot.py` | Saves live forecasts so they can be scored later |
 | `score_live.py` | Scores saved forecasts and picks what each city serves |
@@ -119,6 +123,19 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 - The serving models are refitted on the latest 60 days, so they aren't the exact fits scored above.
 - **The fire feature makes little difference.** Upwind fire counts lowered MAE in Delhi, Noida, Ghaziabad, Ludhiana and Lucknow, and raised it in Gurugram, Chandigarh and Kanpur, so those three leave it out. The table shows each city's better version. Choosing that way uses the test days, which flatters the results slightly. Gurugram and Noida share air data yet went opposite ways, which suggests much of this difference is noise.
 
+## Station warning
+
+The model understates the worst air, so the app compares it with what stations measured. If the latest 24-hour PM2.5 average falls in a worse CPCB category than the model's AQI, the site says so at the top and the advice follows the worse of the two. The number itself doesn't change.
+
+We replayed this at noon on each past day using only readings at least 18 hours old, as they'd be known live, from 4 Oct 2025 to 3 Nov 2026 across the 6 cities with stations (2,129 city-days):
+
+| | Without warning | With warning |
+| --- | ---: | ---: |
+| Days we showed a cleaner category than stations measured | 429 | **113** (74% fewer) |
+| Days we showed a worse category than stations measured | 1,254 | 1,370 (9% more) |
+
+It fired on 422 city-days and the air really was worse than the model on 344 of them (82%). "Measured" here means PM2.5 only, while the model's AQI also counts PM10 and other pollutants, so the worse-category counts run high with or without the warning.
+
 ## Data sources
 
 | Source | Used for | Dates |
@@ -127,7 +144,7 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 | [Open-Meteo Weather and Archive APIs](https://open-meteo.com/) | Wind, humidity, rain, boundary layer | From 4 Aug 2022 |
 | [Open-Meteo Previous Runs API](https://open-meteo.com/en/docs/previous-runs-api) | Archived weather forecasts for honest testing | Last 71 days. No boundary-layer forecasts |
 | [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) | VIIRS fire detections | Last 14 days from three satellites. History from Suomi NPP only: 25 Aug to 4 Nov 2026 (near-real-time), and 1 Oct to 4 Nov in 2024 and 2025 (final processed data) |
-| [OpenAQ](https://openaq.org/) | Measured PM2.5 from CPCB stations and the AirNow New Delhi monitor, used to check the model and shown beside it | 1 Oct 2026 onwards. CPCB runs about half a day behind |
+| [OpenAQ](https://openaq.org/) | Measured PM2.5 from CPCB stations and the AirNow New Delhi monitor, used to check the model and shown beside it | 1 Oct 2025 onwards. CPCB runs about half a day behind |
 | [CPCB via data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations) | Optional direct feed of official readings, used instead of OpenAQ if `DATA_GOV_IN_KEY` is set | Live. Not tested: no key was available |
 | [CPCB AQI method](https://airquality.cpcb.gov.in/ccr_docs/How_AQI_Calculated.pdf) | Breakpoints and rules | Cited in `backend/ml/aqi.py` |
 
@@ -135,7 +152,9 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 
 ## Limitations
 
-- **Modelled, not measured, and it understates the worst air.** Headline AQI comes from a global model run through CPCB's method. It is not an official reading. Measured against nearby CPCB stations from 1 Oct to 3 Nov 2026, the model's average was within about 25% in 5 of the 6 cities we could check (Chandigarh read about 47% high). But on the worst 10% of hours it read too low in 4 of them: Delhi 98 vs 169 µg/m³ measured, Ghaziabad 109 vs 198, Noida 110 vs 173, Gurugram 115 vs 146. Lucknow and Chandigarh held up. So on the dirtiest days the AQI shown can be a category too clean. The app shows this comparison, and measured readings beside the model.
+- **Modelled, not measured, and it understates the worst air.** Headline AQI comes from a global model run through CPCB's method. It is not an official reading. Measured against nearby CPCB stations from 1 Oct to 3 Nov 2026, the model's average was within about 25% in 5 of the 6 cities we could check (Chandigarh read about 47% high). But on the worst 10% of hours it read too low in 4 of them: Delhi 98 vs 169 µg/m³ measured, Ghaziabad 109 vs 197, Noida 110 vs 173, Gurugram 115 vs 146. Lucknow and Chandigarh held up. So on the dirtiest days the AQI shown can be a category too clean. The app shows this comparison, and warns when stations measured worse (see below).
+- **No correction to the model is applied.** We tested fitted corrections and a recent-gap correction on days they never saw. Fitted ones failed in Delhi, over-warning on up to 38 of 50 winter days. The recent-gap correction had to pass both a winter and a recent test, and only Ghaziabad did, out of 6 cities. One pass in six could be luck, so the headline stays the plain model.
+- **The station warning has limits.** It can only be as fresh as the stations, so it can't see a sudden spike until readings arrive, and it can't work for Ludhiana or Kanpur. It was weakest in Lucknow, right on 12 of 28 days.
 - **Station coverage.** OpenAQ returned no recent PM2.5 hours for Ludhiana or Kanpur, so those cities can't be checked. CPCB readings reach OpenAQ about half a day late. The stations are the nearest few to each city point, so they may not represent the whole city.
 - **Source scores are estimates.** They are rules we chose, not calibrated against source-apportionment studies. They are separate scores and don't add up to 100%.
 - **Coarse model.** It can't see a single road or building site, so the vehicle and dust scores rest on broad signals.

@@ -230,3 +230,12 @@
 {"at": "2026-11-03T23:09:39+00:00", "url": "https://api.openaq.org/v3/locations/7140/latest", "params": {}, "status": 200}
 {"at": "2026-11-03T23:09:41+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 26.45, "longitude": 80.33, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
 {"at": "2026-11-03T23:09:42+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 26.45, "longitude": 80.33, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-03T23:10:57+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA20_NRT/73.5,26.0,81.5,32.7/5/2026-10-21", "params": {}, "status": 200}
+{"at": "2026-11-03T23:10:59+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA20_NRT/73.5,26.0,81.5,32.7/5/2026-10-26", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:02+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA20_NRT/73.5,26.0,81.5,32.7/5/2026-10-31", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:07+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA21_NRT/73.5,26.0,81.5,32.7/5/2026-10-21", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:09+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA21_NRT/73.5,26.0,81.5,32.7/5/2026-10-26", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:12+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_NOAA21_NRT/73.5,26.0,81.5,32.7/5/2026-10-31", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:15+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_SNPP_NRT/73.5,26.0,81.5,32.7/5/2026-10-21", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:20+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_SNPP_NRT/73.5,26.0,81.5,32.7/5/2026-10-26", "params": {}, "status": 200}
+{"at": "2026-11-03T23:11:22+00:00", "url": "https://firms.modaps.eosdis.nasa.gov/api/area/csv/***/VIIRS_SNPP_NRT/73.5,26.0,81.5,32.7/5/2026-10-31", "params": {}, "status": 200}

@@ -37,7 +37,6 @@ export function Specks({ data }: Props) {
   const steps = useRef<(HTMLDivElement | null)[]>([]);
   const state = useRef({ specks: 0, dark: false });
   const pm = Math.round(now.pollutants.find((p) => p.id === "pm2_5")?.value ?? now.pm2_5 ?? 0);
-  const measured = now.official.stations[0];
   const specks = useMemo(() => Array.from({ length: MAX_SPECKS }, (_, i) => ({
     x: (i * 0.6180339) % 1, y: (i * 0.7548776) % 1, r: 5 + ((i * 7) % 5) * 1.6, phase: i * 1.7, speed: 0.4 + ((i * 13) % 10) / 12,
   })), []);
@@ -129,7 +128,7 @@ export function Specks({ data }: Props) {
           <p className="s-cat">{now.category?.name ?? "AQI not available"}</p>
           {now.dominant && <p>Driven mostly by {now.dominant}. CPCB scale, modelled data.</p>}
           {now.check?.warn && <p className="s-alert" role="alert">{now.check.message}</p>}
-          {measured?.time && <p>Measured at {measured.station} ({measured.provider}): PM2.5 {whole(measured.pm2_5)} µg/m³, {dateLabel(measured.time)} {measured.time.slice(11, 16)} IST.</p>}
+          {now.check && !now.check.warn && <p>Measured by {now.check.source}: PM2.5 averaged {now.check.measured_pm} µg/m³ over the 24 hours to {now.check.until}, {now.check.category.name}.</p>}
         </div>
       </div>
     </section>

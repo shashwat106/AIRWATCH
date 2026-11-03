@@ -1,15 +1,10 @@
-"""Correct modelled PM2.5 towards what CPCB stations measure.
+"""Tools for testing corrections of modelled PM2.5 against CPCB stations.
 
-The global model squeezes values towards the middle, so it understates the worst hours. This learns
-from past hours how the model relates to the mean of a city's nearby CPCB stations. It uses only
-inputs that exist for live and forecast hours, so it also works where no station reading exists yet.
-
-A correction is served only for cities where it passes `passes_test` on days it never saw.
+The global model squeezes values towards the middle, so it understates the worst hours. These
+functions fit and score possible corrections on days they never saw. None is used in the app: only
+Ghaziabad passed both tests, so the app warns from station readings instead (see warning.py).
 """
 from __future__ import annotations
-
-import json
-from pathlib import Path
 
 import lightgbm as lgb
 import numpy as np
@@ -17,8 +12,6 @@ import pandas as pd
 
 from .aqi import sub_index
 
-MODEL_DIR = Path(__file__).resolve().parent / "models"
-REPORT_PATH = Path(__file__).resolve().parent / "calibration.json"
 PARAMS = dict(n_estimators=250, learning_rate=0.04, num_leaves=15, min_child_samples=40, subsample=0.8,
               subsample_freq=1, colsample_bytree=0.8, reg_lambda=2.0, verbose=-1, random_state=42, n_jobs=2)
 CATEGORY_EDGES = (50, 100, 200, 300, 400)
@@ -91,20 +84,3 @@ def passes_test(raw: dict, fixed: dict) -> bool:
     """Better on the worst hours, not worse overall, and fewer under-warned days."""
     return (fixed["worst_mae"] < raw["worst_mae"] * 0.9 and fixed["mae"] <= raw["mae"] * 1.05
             and fixed["under_warn_days"] < raw["under_warn_days"])
-
-
-def model_path(city_id: str) -> Path:
-    return MODEL_DIR / f"{city_id}_calibration.txt"
-
-
-def load_report() -> dict:
-    return json.loads(REPORT_PATH.read_text(encoding="utf-8")) if REPORT_PATH.exists() else {}
-
-
-def apply(city_id: str, air: pd.DataFrame, wx: pd.DataFrame) -> pd.Series | None:
-    """Corrected PM2.5 for these hours, or None if this city has no approved correction."""
-    if not load_report().get("cities", {}).get(city_id, {}).get("approved") or not model_path(city_id).exists():
-        return None
-    booster = lgb.Booster(model_file=str(model_path(city_id)))
-    x = features(air, wx)
-    return pd.Series(np.expm1(booster.predict(x[booster.feature_name()])), index=x.index).clip(lower=0)

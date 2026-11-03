@@ -46,10 +46,11 @@ def check(sources: dict[str, pd.Series], model_aqi: int | None, now: pd.Timestam
     index = sub_index("pm2_5", pm)
     measured = category(index)
     warn = rank(index) > rank(model_aqi)
-    out = {"warn": warn, "measured_pm": round(pm), "measured_index": index, "category": {"name": measured[0], "color": measured[1]},
+    until = f"{end.day} {end:%b} {end:%H:%M} IST"
+    out = {"warn": warn, "measured_pm": round(pm), "until": until, "measured_index": index, "category": {"name": measured[0], "color": measured[1]},
            "source": name, "to": end.isoformat(timespec="minutes"), "message": None}
     if warn:
-        out["message"] = (f"Stations measured worse air than this estimate: PM2.5 averaged {pm:.0f} µg/m³ over 24 hours, "
+        out["message"] = (f"Stations measured worse air than this estimate: PM2.5 averaged {pm:.0f} µg/m³ over the 24 hours to {until}, "
                           f"which is {measured[0]}. Treat today as {measured[0]}.")
     return out
 

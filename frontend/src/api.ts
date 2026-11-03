@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const BASE = import.meta.env.VITE_API_URL ?? "";
 // Raise this whenever API shapes change, so an old saved copy is never read by newer code.
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 6;
 
 export type Category = { name: string; color: string };
 export type Station = { station: string; provider?: string; distance_km?: number; pm2_5?: number; time?: string; aqi?: number | null; category?: Category | null };
@@ -12,7 +12,7 @@ export type Now = {
   pollutants: { id: string; label: string; value: number | null; unit: string; window: string; sub_index: number | null }[];
   weather: { wind_kmh: number | null; wind_from: string | null; humidity_pct: number | null; mixing_layer_m: number | null; rain_mm: number | null };
   shared_grid_with: string | null; official: { available: boolean; message: string | null; stations: Station[]; source: string | null };
-  check: { warn: boolean; measured_pm: number; measured_index: number; category: Category; source: string; to: string; message: string | null } | null;
+  check: { warn: boolean; until: string; measured_pm: number; measured_index: number; category: Category; source: string; to: string; message: string | null } | null;
   advice_category: Category | null;
   advice: { id: string; title: string; text: string }[]; advice_note: string; fetched_at: string; stale: boolean;
 };

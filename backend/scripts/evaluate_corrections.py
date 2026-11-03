@@ -1,12 +1,10 @@
-"""Test corrections on days they never saw, then fit and approve only the ones that pass. Run from anywhere.
+"""Test fitted corrections on days they never saw. Results are printed; nothing is applied. Run from anywhere.
 
 Two tests, each training only on earlier data:
   winter:  train 1 Oct to 31 Dec 2025, test 1 Jan to 28 Feb 2026 (peak smog)
   recent:  train to 20 Oct 2026,       test 21 Oct to 3 Nov 2026 (this season's rise)
 """
-import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -41,29 +39,23 @@ def run_split(x, real, raw, split):
 
 
 def main() -> None:
-    report = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "cities": {}}
     for city in CITIES.values():
         path = f.history_path("station", city.id)
         if not path.exists():
             print(city.id, "no station data")
-            report["cities"][city.id] = {"approved": False, "reason": "No station data."}
             continue
         real = cal.station_mean(pd.read_parquet(path))
         air = pd.read_parquet(f.history_path("air", city.id))
         wx = pd.read_parquet(f.history_path("wx", city.id))
         x = cal.features(air, wx)
         print(f"== {city.id}: {len(real)} station hours, {real.index.min().date()} to {real.index.max().date()}, mean {real.mean():.0f}, top1% {real.quantile(.99):.0f}")
-        results = {}
         for name, split in SPLITS.items():
             res = run_split(x, real, air["pm2_5"], split)
             if res is None:
                 print("  ", name, "not enough hours")
                 continue
-            results[name] = res
             for method, s in res.items():
                 print(f"   {name:7}{method:9} MAE {s['mae']:6.1f} bias {s['bias']:7.1f} | worst {s['worst_pred']:4d} vs {s['worst_real']:4d} (MAE {s['worst_mae']:6.1f}) | days {s['days']:3d}: same {s['same_category_days']:3d} under {s['under_warn_days']:3d} over {s['over_warn_days']:3d}")
-        report["cities"][city.id] = {"results": results}
-    Path(cal.REPORT_PATH).with_suffix(".draft.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
 
 
 main()

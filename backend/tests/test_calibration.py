@@ -62,10 +62,3 @@ def test_passes_needs_all_three_conditions():
     assert not cal.passes_test(raw, good(mae=29.0, worst_mae=95.0, under_warn_days=5))  # worst hours barely better
     assert not cal.passes_test(raw, good(mae=33.0, worst_mae=70.0, under_warn_days=5))  # worse overall
     assert not cal.passes_test(raw, good(mae=29.0, worst_mae=70.0, under_warn_days=10))  # no fewer under-warned days
-
-
-def test_apply_refuses_unapproved_cities(monkeypatch):
-    air, wx = frames()
-    monkeypatch.setattr(cal, "load_report", lambda: {"cities": {"delhi": {"approved": False}}})
-    assert cal.apply("delhi", air, wx) is None
-    assert cal.apply("kanpur", air, wx) is None
