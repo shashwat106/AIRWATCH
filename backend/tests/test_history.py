@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ml.history import (compare_years, correlation_strength, daily_table, fire_link, ratio_words,
+from ml.history import (compare_years, correlation_strength, daily_table, fire_link, hour_table, ratio_words,
                         recent_averages, same_date_in_year, season_comparison, season_lines,
                         season_start, season_stats, season_windows, worst_days)
 
@@ -137,3 +137,13 @@ def test_worst_days_order_and_category():
     t = table({"2026-10-01": 450, "2026-10-02": 250, "2026-10-03": 320, "2026-10-04": None})
     res = worst_days(t, date(2026, 10, 1), date(2026, 10, 4), n=2)
     assert [(x["date"], x["category"]) for x in res] == [("2026-10-01", "Severe"), ("2026-10-03", "Very Poor")]
+
+
+def test_hour_table_uses_the_same_window_each_day():
+    air = hourly("2026-11-01", 3)
+    air.loc["2026-11-02 15:00":"2026-11-03 14:00", "pm2_5"] = 200.0
+    aqi = pd.Series(300.0, index=air.index)
+    out = hour_table(air, aqi, 14)
+    assert list(out.index.strftime("%Y-%m-%d")) == ["2026-11-01", "2026-11-02", "2026-11-03"]
+    assert out.loc["2026-11-03", "pm2_5"] == 200  # exactly the 24 h ending 14:00 on 3 Nov
+    assert np.isnan(out.loc["2026-11-01", "pm2_5"])  # only 15 hours existed by then

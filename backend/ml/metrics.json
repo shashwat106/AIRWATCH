@@ -27,7 +27,11 @@
         "rmse": 34.69,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "gurugram": {
       "train_period": [
@@ -53,7 +57,11 @@
         "rmse": 38.34,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "noida": {
       "train_period": [
@@ -79,7 +87,11 @@
         "rmse": 38.34,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "ghaziabad": {
       "train_period": [
@@ -105,7 +117,11 @@
         "rmse": 35.6,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "chandigarh": {
       "train_period": [
@@ -131,7 +147,11 @@
         "rmse": 18.7,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "ludhiana": {
       "train_period": [
@@ -157,7 +177,11 @@
         "rmse": 32.34,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "lucknow": {
       "train_period": [
@@ -183,7 +207,11 @@
         "rmse": 31.47,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     },
     "kanpur": {
       "train_period": [
@@ -209,7 +237,11 @@
         "rmse": 30.14,
         "n": 576
       },
-      "uses_fire_feature": false
+      "uses_fire_feature": false,
+      "open_meteo_live": null,
+      "ours_live": null,
+      "served": "open_meteo",
+      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
     }
   }
 }

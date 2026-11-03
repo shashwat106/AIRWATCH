@@ -5,7 +5,7 @@ range. Run from backend/.
 """
 import asyncio
 import sys
-from datetime import date, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app import fetchers as f  # noqa: E402
 from app.config import AQ_EARLIEST, CITIES  # noqa: E402
+from ml.aqi import aqi_series  # noqa: E402
 
 
 async def extend(kind: str, city, fetch) -> None:
@@ -21,7 +22,7 @@ async def extend(kind: str, city, fetch) -> None:
     old = pd.read_parquet(path) if path.exists() else None
     # Re-fetch the last two stored days too, because the newest hours can be revised.
     start = AQ_EARLIEST if old is None else (old.index.max() - pd.Timedelta(days=2)).date().isoformat()
-    end = (date.today() - timedelta(days=1)).isoformat()
+    end = (pd.Timestamp.now(tz="Asia/Kolkata").date() - timedelta(days=1)).isoformat()
     new = await fetch(city, start, end)
     new = new.dropna(how="all")
     merged = new if old is None else pd.concat([old[old.index < new.index.min()], new])
@@ -33,6 +34,7 @@ async def main() -> None:
     for city in CITIES.values():
         await extend("air", city, f.air_range)
         await extend("wx", city, f.weather_archive)
+        aqi_series(pd.read_parquet(f.history_path("air", city.id))).to_parquet(f.history_path("aqi", city.id))
 
 
 asyncio.run(main())

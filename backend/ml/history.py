@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .aqi import aqi_series, category
+from .sources import mean_wind, upwind_fires
 
 MIN_HOURS = 16
 MIN_CORRELATION_DAYS = 14
@@ -37,10 +38,10 @@ def season_windows(day: date) -> tuple[tuple[date, date], tuple[date, date]]:
     return (start, day), (date(start.year - 1, 10, 1), same_date_in_year(day, day.year - 1))
 
 
-def daily_table(air: pd.DataFrame) -> pd.DataFrame:
+def daily_table(air: pd.DataFrame, aqi: pd.Series | None = None) -> pd.DataFrame:
     """One row per calendar day: AQI at 23:00 (the 24-hour running value for that whole day), mean
     particles, and hours of data. Days under MIN_HOURS get NaN rather than a partial figure."""
-    aqi = aqi_series(air)["aqi"]
+    aqi = aqi_series(air)["aqi"] if aqi is None else aqi
     groups = air.groupby(air.index.date)
     table = pd.DataFrame({"pm2_5": groups["pm2_5"].mean(), "pm10": groups["pm10"].mean(),
                           "hours": groups["pm2_5"].count()})
@@ -50,6 +51,28 @@ def daily_table(air: pd.DataFrame) -> pd.DataFrame:
     table["aqi"] = pd.to_numeric(closing, errors="coerce").reindex(table.index)
     table.loc[table.hours < MIN_HOURS, ["pm2_5", "pm10", "aqi"]] = np.nan
     return table
+
+
+def hour_table(air: pd.DataFrame, aqi: pd.Series, hour: int) -> pd.DataFrame:
+    """One row per day for the 24 hours ending at `hour`, so a part-finished today compares fairly
+    with earlier dates: every row covers the same window of the day."""
+    means = air[["pm2_5", "pm10"]].rolling(24, min_periods=MIN_HOURS).mean()
+    table = means[means.index.hour == hour].copy()
+    table["hours"] = air["pm2_5"].rolling(24, min_periods=1).count().reindex(table.index)
+    table["aqi"] = pd.to_numeric(aqi, errors="coerce").reindex(table.index)
+    table.index = table.index.normalize()
+    return table
+
+
+def daily_upwind(fires: pd.DataFrame, lat: float, lon: float, wx: pd.DataFrame, days: pd.DatetimeIndex) -> pd.Series:
+    """Upwind fire detections for each day, using that day's mean wind."""
+    counts = {}
+    for day in days:
+        hours = wx.loc[day:day + pd.Timedelta(hours=23)]
+        speed, direction = mean_wind(hours["wind_speed_10m"], hours["wind_direction_10m"])
+        end = day + pd.Timedelta(hours=23, minutes=59)
+        counts[day] = upwind_fires(fires, lat, lon, speed, direction, end, hours=24).upwind_count
+    return pd.Series(counts, dtype=float)
 
 
 def _row(table: pd.DataFrame, day: date) -> dict | None:
