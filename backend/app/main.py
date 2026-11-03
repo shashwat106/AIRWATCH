@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from . import service
 from .config import CITIES, FRONTEND_ORIGIN, City
 
-RATE_LIMIT, RATE_WINDOW = 120, 60.0
+RATE_LIMIT, RATE_WINDOW = 300, 60.0  # per IP; judges on one network can share an address
 
 app = FastAPI(title="AirWatch API", version="1.0")
 app.add_middleware(CORSMiddleware, allow_origins=[FRONTEND_ORIGIN], allow_methods=["GET"], allow_headers=["*"])
@@ -93,6 +93,7 @@ class Forecast(BaseModel):
     served_reason: str
     hours: list[ForecastHour]
     best_time: dict[str, Any] | None
+    timing: dict[str, Any] | None
     best_time_note: str
     metrics: dict[str, Any]
     source: str
@@ -195,6 +196,17 @@ async def history(city_id: str):
     return await guarded(service.city_history(get_city(city_id)))
 
 
+class Insights(BaseModel):
+    city: str
+    levers: dict[str, Any] | None
+    relief: dict[str, Any] | None
+    outlook: dict[str, Any] | None
+    limits: dict[str, Any] | None
+    source: str
+    fetched_at: str
+    stale: bool
+
+
 class FireDay(BaseModel):
     date: str
     fires: list[dict[str, float]]
@@ -203,6 +215,11 @@ class FireDay(BaseModel):
 class FireDays(BaseModel):
     days: list[FireDay]
     meta: dict[str, Any]
+
+
+@app.get("/api/city/{city_id}/insights", response_model=Insights)
+async def insights(city_id: str):
+    return await guarded(service.city_insights(get_city(city_id)))
 
 
 @app.get("/api/fires", response_model=FireDays)

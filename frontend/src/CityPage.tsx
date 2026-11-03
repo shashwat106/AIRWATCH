@@ -3,7 +3,7 @@ import {
   CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-import { CalendarDay, Forecast, History, Now, Resource, Sources, useResource } from "./api";
+import { CalendarDay, Forecast, History, Insights, Now, Resource, Sources, useResource } from "./api";
 import { categoryFor, clock, dateLabel, hourLabel, textOn, whole } from "./format";
 import { Loading, Problem } from "./parts";
 
@@ -105,7 +105,7 @@ function Ribbon({ forecast }: { forecast: Forecast }) {
   return (
     <section>
       <h2>{best ? `Best time outside ${tomorrow ? "tomorrow" : "today"}: ${hourLabel(best.start)} to ${hourLabel(best.end)}` : "No clear best time today"}</h2>
-      {best && <p>Air in that window is about {best.mean_index} on the hourly index, {best.category?.name}.</p>}
+      {best && <p>Air in that window is about {best.mean_index} on the hourly index, {best.category?.name}. {forecast.timing?.summary}</p>}
       <div className="ribbon" role="group" aria-label="Next 24 hours, one block per hour">
         {hours.map((h, i) => {
           const cat = categoryFor(h.hourly_index);
@@ -311,6 +311,17 @@ function Compared({ data }: { data: History }) {
   );
 }
 
+function Outlook({ data }: { data: Insights }) {
+  const lines = [data.outlook?.summary, data.relief?.summary, data.levers?.summary, data.levers?.rain?.summary, data.limits?.india_summary];
+  return (
+    <section>
+      <h2>What happens next</h2>
+      <ul className="insights">{lines.filter(Boolean).map((line) => <li key={line}>{line}</li>)}</ul>
+      <p className="fine">{data.source}</p>
+    </section>
+  );
+}
+
 function Advice({ now }: { now: Now }) {
   if (!now.category) return null;
   return (
@@ -330,6 +341,7 @@ export function CityPage({ id }: { id: string }) {
   const forecast = useResource<Forecast>(`/api/city/${id}/forecast`);
   const sources = useResource<Sources>(`/api/city/${id}/sources`);
   const history = useResource<History>(`/api/city/${id}/history`);
+  const insights = useResource<Insights>(`/api/city/${id}/insights`);
   const issued = forecast.data?.issued;
   return (
     <main className="city">
@@ -344,6 +356,7 @@ export function CityPage({ id }: { id: string }) {
         <Gate res={forecast} what="forecast">{(f) => <><Ribbon forecast={f} /><ForecastChart forecast={f} /></>}</Gate>
         <Gate res={sources} what="likely contributors">{(s) => <Contributors data={s} weather={now.data?.weather} />}</Gate>
         <Gate res={history} what="past comparisons">{(h) => <Compared data={h} />}</Gate>
+        <Gate res={insights} what="what happens next">{(i) => <Outlook data={i} />}</Gate>
         {now.data && <Advice now={now.data} />}
         {issued && <p className="fine end">Forecast issued {clock(issued)} IST. Estimates only: check official sources for decisions that matter.</p>}
       </div>

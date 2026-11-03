@@ -2,9 +2,9 @@ import "./story.css";
 
 import { useEffect, useState } from "react";
 
-import { Forecast, History, load, Now, Sources } from "../api";
+import { Forecast, History, Insights, load, Now, Sources } from "../api";
 import { Problem } from "../parts";
-import { Advice, Calendar, Causes, Fires, Season, Specks, Today, Trust } from "./chapters";
+import { Advice, Calendar, Causes, Fires, Next, Season, Specks, Today, Trust } from "./chapters";
 import { clamp } from "./scroll";
 
 export const CITY_NAMES: Record<string, string> = {
@@ -13,18 +13,18 @@ export const CITY_NAMES: Record<string, string> = {
 };
 
 export type Bundle = {
-  id: string; now: Now; forecast: Forecast; sources: Sources; history: History;
+  id: string; now: Now; forecast: Forecast; sources: Sources; history: History; insights: Insights;
   city: { id: string; name: string; lat: number; lon: number };
   days: { date: string; fires: { lat: number; lon: number }[] }[];
 };
 
 async function loadAll(id: string): Promise<Bundle> {
   const get = async <T,>(path: string) => (await load<T>(path)).data;
-  const [now, forecast, sources, history, cities, fires] = await Promise.all([
+  const [now, forecast, sources, history, insights, cities, fires] = await Promise.all([
     get<Now>(`/api/city/${id}/now`), get<Forecast>(`/api/city/${id}/forecast`), get<Sources>(`/api/city/${id}/sources`),
-    get<History>(`/api/city/${id}/history`), get<Bundle["city"][]>("/api/cities"), get<{ days: Bundle["days"] }>("/api/fires"),
+    get<History>(`/api/city/${id}/history`), get<Insights>(`/api/city/${id}/insights`), get<Bundle["city"][]>("/api/cities"), get<{ days: Bundle["days"] }>("/api/fires"),
   ]);
-  return { id, now, forecast, sources, history, city: cities.find((c) => c.id === id)!, days: fires.days };
+  return { id, now, forecast, sources, history, insights, city: cities.find((c) => c.id === id)!, days: fires.days };
 }
 
 function TopBar({ id }: { id: string }) {
@@ -83,6 +83,7 @@ export function Story({ id }: { id: string }) {
           <Causes data={bundle} />
           <Season data={bundle} />
           <Calendar data={bundle} />
+          <Next data={bundle} />
           <Trust data={bundle} />
           <Advice data={bundle} />
         </main>

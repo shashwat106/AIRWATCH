@@ -112,10 +112,11 @@ export function Specks({ data }: Props) {
         </div>
         <div className="s-step" ref={(e) => { steps.current[1] = e; }}>
           <h2>Each speck is 1 µg/m³ of PM2.5.</h2>
-          <p>15 is the World Health Organization's guideline for a 24-hour average.</p>
+          <p>15 is the World Health Organization's guideline for a 24-hour average. {data.insights.limits?.who_summary}</p>
         </div>
         <div className="s-step" ref={(e) => { steps.current[2] = e; }}>
           <h2>60 is India's own 24-hour standard.</h2>
+          {data.insights.limits && <p>{data.insights.limits.india_summary}</p>}
         </div>
         <div className="s-step" ref={(e) => { steps.current[3] = e; }}>
           <h2>{pm} is {now.city} over the last 24 hours.</h2>
@@ -185,6 +186,7 @@ export function Today({ data }: Props) {
           <div ref={finale} className="s-over">
             <h2>{best ? `Best time outside ${tomorrow ? "tomorrow" : "today"}: ${hourLabel(best.start)} to ${hourLabel(best.end)}` : "No clear best time today"}</h2>
             {best && <p className="s-big">About {best.mean_index} on the hourly index, {best.category?.name}.</p>}
+            {forecast.timing && <p className="s-reason">{forecast.timing.summary}</p>}
           </div>
         </div>
         <div className="s-skyline" aria-label="Forecast by hour" role="img">
@@ -468,7 +470,96 @@ export function Calendar({ data }: Props) {
   );
 }
 
-/** Chapter 7. How far to trust all of this, using the real test results. */
+/** Chapter 7. What would clear the air, whether that's coming, and what past winters did next. */
+export function Next({ data }: Props) {
+  const { levers, relief, outlook, source } = data.insights;
+  const section = useRef<HTMLElement>(null);
+  const stages = useRef<(HTMLDivElement | null)[]>([]);
+  const still = useRef<HTMLElement>(null);
+  const windy = useRef<HTMLElement>(null);
+  const cards = useRef<(HTMLLIElement | null)[]>([]);
+  const rows = useRef<(HTMLDivElement | null)[]>([]);
+  const top = Math.max(levers?.still_pm ?? 1, levers?.windy_pm ?? 1);
+  const most = Math.max(1, ...(outlook?.winters ?? []).map((w) => w.before + w.after));
+  useProgress(section, (p) => {
+    const windows = [[-1, 0, 0.29, 0.33], [0.35, 0.39, 0.62, 0.66], [0.68, 0.72, 2, 3]];
+    windows.forEach(([a, b, c, d], i) => show(stages.current[i], Math.min(span(p, a, b), 1 - span(p, c, d))));
+    const grow = span(p, 0.04, 0.24);
+    if (still.current) still.current.style.transform = `scaleX(${((levers?.still_pm ?? 0) / top) * grow})`;
+    if (windy.current) windy.current.style.transform = `scaleX(${((levers?.windy_pm ?? 0) / top) * grow})`;
+    cards.current.forEach((card, i) => show(card, span(p, 0.4 + i * 0.06, 0.46 + i * 0.06)));
+    rows.current.forEach((row, i) => {
+      if (row) row.style.transform = `scaleX(${span(p, 0.73 + i * 0.05, 0.82 + i * 0.05)})`;
+    });
+  });
+  return (
+    <section ref={section} className="chapter" style={{ height: "460vh" }}>
+      <div className="stick s-next">
+        <div className="s-stage" ref={(e) => { stages.current[0] = e; }}>
+          <h2>What would clear the air</h2>
+          {levers ? (
+            <>
+              <p className="s-big">Still days carry about {(levers.still_pm / levers.windy_pm).toFixed(1)}× the PM2.5 of windy days in {data.now.city}.</p>
+              <div className="s-compare s-levers">
+                <span>Still days, under 6 km/h</span><div className="s-track"><i ref={still} className="s-second" /></div><strong>{levers.still_pm} µg/m³</strong>
+                <span>Windy days, 10 km/h or more</span><div className="s-track"><i ref={windy} /></div><strong>{levers.windy_pm} µg/m³</strong>
+              </div>
+              <p className="s-fine">Average PM2.5 on winter days: {levers.still_days} still days, {levers.windy_days} windy days. {levers.rain?.summary}</p>
+            </>
+          ) : <p>There aren't enough still and windy days on record here to compare.</p>}
+        </div>
+        <div className="s-stage" ref={(e) => { stages.current[1] = e; }}>
+          <h2>Is that coming?</h2>
+          {relief ? (
+            <>
+              <p className="s-big">{relief.summary}</p>
+              <ul className="s-days">
+                {relief.days.map((d, i) => (
+                  <li key={d.date} ref={(e) => { cards.current[i] = e; }}>
+                    <strong>{dateLabel(d.date)}</strong>
+                    <b>{d.verdict}</b>
+                    <span>Wind {d.wind_kmh.toFixed(1)} km/h</span>
+                    <span>Rain {d.rain_mm.toFixed(1)} mm</span>
+                    <span>Mixing layer {whole(d.mixing_layer_m)} m</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : <p>The weather forecast is unavailable right now.</p>}
+        </div>
+        <div className="s-stage" ref={(e) => { stages.current[2] = e; }}>
+          <h2>{outlook?.ahead ? "The worst is usually still ahead" : "What past winters did"}</h2>
+          {outlook ? (
+            <>
+              <p className="s-big">{outlook.summary}</p>
+              <div className="s-winters">
+                {outlook.winters.map((w, i) => (
+                  <div key={w.winter} className="s-winter">
+                    <span>{w.winter}</span>
+                    <div className="s-wbar">
+                      <div ref={(e) => { rows.current[i] = e; }} className="s-wfill" style={{ width: `${((w.before + w.after) / most) * 100}%` }}>
+                        {w.before > 0 && <i style={{ flexGrow: w.before, background: "#A65A00" }} />}
+                        {w.after > 0 && <i style={{ flexGrow: w.after, background: "#0072B2" }} />}
+                      </div>
+                    </div>
+                    <span>{w.before + w.after} days. Worst: {dateLabel(w.worst_date)}, AQI {w.worst_aqi}</span>
+                  </div>
+                ))}
+              </div>
+              <ul className="s-legend">
+                <li><i style={{ background: "#A65A00" }} />Days above AQI 300 by this date</li>
+                <li><i style={{ background: "#0072B2" }} />Days above AQI 300 after it</li>
+              </ul>
+              <p className="s-fine">Past winters, not a prediction for this one. {source}</p>
+            </>
+          ) : <p>There aren't enough full winters on record to compare.</p>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Chapter 8. How far to trust all of this, using the real test results. */
 export function Trust({ data }: Props) {
   const { forecast, now } = data;
   const section = useRef<HTMLElement>(null);
@@ -511,7 +602,7 @@ export function Trust({ data }: Props) {
   );
 }
 
-/** Chapter 8. Guidance for today's category, then the sources. */
+/** Chapter 9. Guidance for today's category, then the sources. */
 export function Advice({ data }: Props) {
   const { now, id } = data;
   const section = useRef<HTMLElement>(null);

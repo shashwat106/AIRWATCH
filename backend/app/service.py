@@ -11,6 +11,7 @@ import pandas as pd
 
 from ml import forecast as fc
 from ml import history as hist
+from ml import insights as ins
 from ml.aqi import COLUMNS, LABELS, aqi_series, category, running_means, sub_index
 from ml.sources import compass, mean_wind, score_hour, top_cause
 
@@ -179,11 +180,13 @@ async def city_forecast(city: City) -> dict:
     rows = [{"time": t.isoformat(), "pm2_5": chosen.pm2_5[t], "pm10": chosen.pm10[t], "aqi": aqi[t], "hourly_index": index[t],
              "open_meteo_pm2_5": baseline.pm2_5[t], "ours_pm2_5": None if ours is None else ours.pm2_5[t]} for t in hours]
     best = fc.best_window(index)
+    timing = None
     if best:
         best["category"] = category_payload(best["mean_index"])
+        timing = ins.timing_saving(chosen.pm2_5, best["start"], best["end"])
     return clean({
         "city": city.name, "issued": at.isoformat(), "served": served, "served_reason": reason, "hours": rows,
-        "best_time": best, "best_time_note": "Ranked on hourly PM2.5 and PM10, not the 24-hour official AQI.",
+        "best_time": best, "timing": timing, "best_time_note": "Ranked on hourly PM2.5 and PM10, not the 24-hour official AQI.",
         "metrics": metrics, "source": "Open-Meteo" if served == "open_meteo" else "the AirWatch model", **meta,
     })
 
@@ -331,6 +334,20 @@ async def city_history(city: City) -> dict:
         "fire_note": fire_note, "source": MODEL_SOURCE,
         "method_note": "All years use the same model data and the same CPCB calculation. Season figures use complete days only.",
         "range": {"from": AQ_EARLIEST, "to": last_full.isoformat()}, **meta,
+    })
+
+
+async def city_insights(city: City) -> dict:
+    air, wx, meta = await frames(city)
+    at = current_hour(air)
+    history_air, history_wx = stored("air", city.id), stored("wx", city.id)
+    last_full = history_air.index.max().date()
+    table = _daily(city.id, str(last_full))
+    return clean({
+        "city": city.name, "levers": ins.weather_levers(history_air, history_wx),
+        "relief": ins.relief_ahead(wx, at), "outlook": ins.winter_outlook(table["aqi"], last_full, city.name),
+        "limits": ins.days_over_limit(table, last_full, city.name),
+        "source": "Patterns from Open-Meteo model data since Aug 2022. Forecast from Open-Meteo weather.", **meta,
     })
 
 

@@ -14,7 +14,7 @@ from app.main import app  # noqa: E402
 client = TestClient(app)
 paths = ["/api/health", "/api/cities", "/api/map", "/api/map?date=2026-11-03", "/api/map?date=2026-10-22"]
 for city in CITIES:
-    paths += [f"/api/city/{city}/{part}" for part in ("now", "forecast", "sources", "history")]
+    paths += [f"/api/city/{city}/{part}" for part in ("now", "forecast", "sources", "history", "insights")]
 failed = 0
 for path in paths:
     start = time.time()

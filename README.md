@@ -13,6 +13,8 @@ AirWatch tells people in North India what the air is like in their city, what it
 | ![Specks filling the sky, one per microgram of PM2.5](docs/screenshots/story-specks.png) | ![Skyline of the next 24 hours with the best window bracketed](docs/screenshots/story-best.png) |
 | **Fires appear day by day** | **What each day was about** |
 | ![Map of satellite fire detections over Punjab](docs/screenshots/story-fires.png) | ![Calendar of daily AQI and likely cause](docs/screenshots/story-calendar.png) |
+| **What past winters did next** | **This season against last** |
+| ![Bars showing most days above AQI 300 came after this date](docs/screenshots/story-next.png) | ![Lines comparing this season and last on the same dates](docs/screenshots/story-season.png) |
 
 ## Problem
 
@@ -38,8 +40,16 @@ AirWatch is a scroll-driven site, and every animation is drawn from live data:
 | Why | Fills each likely cause to its score, with its reason |
 | This season against last | Draws both seasons on the same dates |
 | Day by day | Lands each day of the season with its AQI and likely cause |
+| What happens next | Shows what has cleared the air before, whether that's in the forecast, and how past winters unfolded from this date |
 | How far to trust this | Shows real test errors and the limits of the data |
 | What to do | Gives guidance for the current category |
+
+Insights are worked out per city from its own record, and a city only gets a claim its data supports:
+
+- **The worst is usually still ahead:** how past winters split around today's date.
+- **What would clear the air:** PM2.5 on still days against windy days, and the day after rain, paired with the forecast.
+- **What timing saves:** the best window against the day's worst 2 hours.
+- **Days over the limit:** days over India's standard and the WHO guideline, against the same dates in earlier years.
 
 Compared with typical AQI dashboards, which stop at the number, AirWatch explains the cause and the best time to go out, and says how sure it is. A map with a date slider (`#/map`) and a full details page (`#/city/delhi`) are also included.
 

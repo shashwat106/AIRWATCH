@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const BASE = import.meta.env.VITE_API_URL ?? "";
 // Raise this whenever API shapes change, so an old saved copy is never read by newer code.
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 export type Category = { name: string; color: string };
 export type Station = { station: string; aqi: number | null; dominant: string | null; category: Category | null; last_update?: string };
@@ -22,6 +22,7 @@ export type ForecastHour = {
 export type Forecast = {
   city: string; issued: string; served: string; served_reason: string; hours: ForecastHour[];
   best_time: { start: string; end: string; mean_index: number; category: Category } | null; best_time_note: string;
+  timing: { best_pm: number; worst_pm: number; ratio: number; summary: string } | null;
   metrics: { ours?: Score; persistence?: Score; same_hour_yesterday?: Score; test_period?: string[] }; source: string;
 };
 export type SourceScore = { id: string; label: string; score: number | null; level: string; reason: string };
@@ -37,6 +38,19 @@ export type Season = {
   poor_days: number; very_poor_days: number; severe_days: number; upwind_fires: number | null;
 };
 export type Notable = { date: string; aqi: number; pm2_5: number; category: string; dominant: string | null; top_source: { label: string; score: number } | null };
+export type Insights = {
+  city: string; source: string;
+  levers: {
+    still_pm: number; still_days: number; windy_pm: number; windy_days: number; summary: string;
+    rain: { days: number; next_day_ratio: number; summary: string } | null;
+  } | null;
+  relief: { summary: string; days: { date: string; wind_kmh: number; rain_mm: number; mixing_layer_m: number; verdict: string; relief: boolean }[] } | null;
+  outlook: {
+    summary: string; total: number; later: number; ahead: boolean;
+    winters: { winter: string; before: number; after: number; worst_date: string; worst_aqi: number }[];
+  } | null;
+  limits: { india_summary: string; who_summary: string; seasons: { season: number; days: number; over_india: number; over_who: number }[] } | null;
+};
 export type CalendarDay = {
   date: string; aqi: number | null; category: Category | null; dominant: string | null; crop_scored: boolean;
   cause: { id: string; label: string; score: number } | null;
