@@ -70,6 +70,8 @@ class Now(BaseModel):
     source_note: str
     shared_grid_with: str | None
     official: Official
+    check: dict[str, Any] | None
+    advice_category: Category | None
     advice: list[dict[str, str]]
     advice_note: str
     fetched_at: str

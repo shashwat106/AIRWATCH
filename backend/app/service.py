@@ -13,6 +13,7 @@ from ml import forecast as fc
 from ml import history as hist
 from ml import insights as ins
 from ml import validation as val
+from ml import warning as warn
 from ml.aqi import COLUMNS, LABELS, aqi_series, category, running_means, sub_index
 from ml.sources import compass, mean_wind, score_hour, top_cause
 
@@ -159,6 +160,20 @@ def weather_now(wx: pd.DataFrame, at: pd.Timestamp) -> dict:
             "rain_mm": row["precipitation"]}
 
 
+async def measured_check(city: City, aqi: int | None) -> dict | None:
+    """Compare the model's AQI with what stations recently measured. Quietly absent if stations are unavailable."""
+    table = stored_stations(city.id)
+    if table is None or not OPENAQ_API_KEY:
+        return None
+    ids = table.drop_duplicates("location")[["sensor", "station", "provider"]]
+    try:
+        recent = (await f.station_recent(city, ids)).df
+    except Exception:
+        return None
+    sources = {f"{provider} stations": rows.groupby("time").pm2_5.mean() for provider, rows in recent.groupby("provider")}
+    return warn.check(sources, aqi, now_ist())
+
+
 async def city_now(city: City) -> dict:
     air, wx, meta = await frames(city)
     at = current_hour(air)
@@ -167,12 +182,15 @@ async def city_now(city: City) -> dict:
     aqi = None if pd.isna(row.aqi) else int(row.aqi)
     cat = category_payload(aqi)
     latest = air.loc[at]
+    check = await measured_check(city, aqi)
+    advice_cat = check["category"] if check and check["warn"] else cat
     return clean({
         "city": city.name, "time": at.isoformat(), "aqi": aqi, "category": cat,
         "dominant": LABELS.get(row.dominant), "pm2_5": latest["pm2_5"], "pm10": latest["pm10"],
         "unit": "µg/m³", "pollutants": pollutant_rows(air, at), "weather": weather_now(wx, at), "source": MODEL_SOURCE, "source_note": SOURCE_NOTE,
         "shared_grid_with": SHARED_GRID.get(city.id), "official": await official(city),
-        "advice": ADVICE.get(cat["name"], []) if cat else [], "advice_note": DISCLAIMER, **meta,
+        "check": check, "advice_category": advice_cat,
+        "advice": ADVICE.get(advice_cat["name"], []) if advice_cat else [], "advice_note": DISCLAIMER, **meta,
     })
 
 
@@ -363,6 +381,8 @@ def validation_for(city: City, air: pd.DataFrame) -> dict | None:
     table = stored_stations(city.id)
     if table is None:
         return None
+    season = pd.Timestamp(hist.season_start(air.index.max().date()))
+    table = table[table.time >= season]  # the file holds a year, for fitting; this reports the season
     result = val.compare(table, air["pm2_5"], city.name)
     if result:
         result["cleanest"] = val.cleanest_window(table)

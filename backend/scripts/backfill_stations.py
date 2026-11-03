@@ -1,4 +1,4 @@
-"""Fetch this season's hourly PM2.5 from the nearest CPCB stations, through OpenAQ, for each city.
+"""Fetch a year of hourly PM2.5 from the nearest CPCB stations, through OpenAQ, for each city.
 
 Stored in data/history/station_<city>.parquet with one row per station-hour, then compared with the
 model. Delhi also gets the AirNow New Delhi monitor. Never prints the key.
@@ -19,7 +19,8 @@ from app.config import CITIES, HISTORY_DIR  # noqa: E402
 
 KEY = os.getenv("OPENAQ_API_KEY", "").strip()
 BASE = "https://api.openaq.org/v3"
-START = "2026-10-01T00:00:00Z"
+START = "2025-10-01"
+END = "2026-11-30"
 RECENT = "2026-11-01"
 PER_CITY = 3
 
@@ -29,22 +30,25 @@ def pm_sensor(loc: dict) -> dict | None:
 
 
 async def hours(client: httpx.AsyncClient, sensor: int) -> list[dict]:
-    rows, page = [], 1
-    while True:
-        r = await client.get(f"{BASE}/sensors/{sensor}/hours", params={"datetime_from": START, "limit": 1000, "page": page})
-        await asyncio.sleep(1.1)
-        if r.status_code != 200:
-            print("   hours HTTP", r.status_code, r.text[:100], flush=True)
-            return rows
-        batch = r.json()["results"]
-        rows += [{"utc": x["period"]["datetimeFrom"]["utc"], "pm2_5": x["value"]} for x in batch]
-        if len(batch) < 1000:
-            return rows
-        page += 1
+    """A year of hours in month-sized requests. Long ranges time out at OpenAQ."""
+    rows = []
+    starts = pd.date_range(START, END, freq="MS", tz="UTC")
+    for first in starts:
+        last = first + pd.offsets.MonthBegin(1)
+        for attempt in range(3):
+            r = await client.get(f"{BASE}/sensors/{sensor}/hours", params={
+                "datetime_from": first.strftime("%Y-%m-%dT%H:%M:%SZ"), "datetime_to": last.strftime("%Y-%m-%dT%H:%M:%SZ"), "limit": 1000})
+            await asyncio.sleep(1.1)
+            if r.status_code == 200:
+                rows += [{"utc": x["period"]["datetimeFrom"]["utc"], "pm2_5": x["value"]} for x in r.json()["results"]]
+                break
+            if attempt == 2:
+                print("   gave up on", first.date(), "HTTP", r.status_code, flush=True)
+    return rows
 
 
 async def main() -> None:
-    async with httpx.AsyncClient(timeout=60, headers={"X-API-Key": KEY}) as client:
+    async with httpx.AsyncClient(timeout=90, headers={"X-API-Key": KEY}) as client:
         for city in CITIES.values():
             r = await client.get(f"{BASE}/locations", params={"coordinates": f"{city.lat},{city.lon}", "radius": 25000, "limit": 100})
             await asyncio.sleep(1.1)

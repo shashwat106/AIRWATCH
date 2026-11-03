@@ -160,3 +160,6 @@
 
 .s-subhead { margin: 2rem 0 .25rem; font-size: clamp(1.4rem, 2.2vw, 2rem); }
 .s-trust .s-fine { color: #c3cac3; }
+
+.s-alert { max-width: 46rem !important; padding: .7rem 1rem; background: var(--paper); color: var(--ink); border-left: 8px solid var(--ink); font-size: 1.15rem !important; }
+.s-hero .s-aqi span { font-size: clamp(8rem, min(24vw, 34vh), 22rem); }

@@ -128,6 +128,7 @@ export function Specks({ data }: Props) {
           <p className="s-aqi"><span ref={aqiNumber}>0</span><small>AQI</small></p>
           <p className="s-cat">{now.category?.name ?? "AQI not available"}</p>
           {now.dominant && <p>Driven mostly by {now.dominant}. CPCB scale, modelled data.</p>}
+          {now.check?.warn && <p className="s-alert" role="alert">{now.check.message}</p>}
           {measured?.time && <p>Measured at {measured.station} ({measured.provider}): PM2.5 {whole(measured.pm2_5)} µg/m³, {dateLabel(measured.time)} {measured.time.slice(11, 16)} IST.</p>}
         </div>
       </div>
@@ -660,9 +661,9 @@ export function Advice({ data }: Props) {
   return (
     <>
       <section ref={section} className="chapter" style={{ height: "240vh" }}>
-        <div className="stick s-advice" style={{ borderTop: `12px solid ${now.category?.color ?? "#FFFFFF"}` }}>
+        <div className="stick s-advice" style={{ borderTop: `12px solid ${now.advice_category?.color ?? "#FFFFFF"}` }}>
           <div className="s-wide">
-            <h2>What to do in {now.category?.name ?? "this"} air</h2>
+            <h2>What to do in {now.advice_category?.name ?? "this"} air</h2>
             <div className="s-cards">
               {now.advice.map((item, i) => (
                 <div key={item.id} ref={(e) => { items.current[i] = e; }}>
@@ -671,7 +672,7 @@ export function Advice({ data }: Props) {
                 </div>
               ))}
             </div>
-            <p className="s-fine">{now.advice_note} If stations near you show worse air, follow the advice for that category.</p>
+            <p className="s-fine">{now.check?.warn ? "Based on what stations measured, because it's worse than the estimate. " : ""}{now.advice_note} If stations near you show worse air, follow the advice for that category.</p>
           </div>
         </div>
       </section>

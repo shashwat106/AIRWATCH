@@ -26,6 +26,7 @@ function Hero({ now, tomorrow }: { now: Now; tomorrow: number | null }) {
       <p className="aqi"><span>{now.aqi ?? "No data"}</span>{now.aqi != null && <small>AQI</small>}</p>
       <p className="cat">{now.category?.name ?? "AQI not available"}</p>
       {now.dominant && <p className="driver">Driven mostly by {now.dominant}</p>}
+      {now.check?.warn && <p className="alert" role="alert">{now.check.message}</p>}
       {tomorrow != null && <p className="next">Forecast: about {Math.round(tomorrow)} by this time tomorrow, {categoryFor(tomorrow)?.name}</p>}
     </header>
   );
@@ -323,11 +324,11 @@ function Outlook({ data }: { data: Insights }) {
 }
 
 function Advice({ now }: { now: Now }) {
-  if (!now.category) return null;
+  if (!now.advice_category) return null;
   return (
     <section>
       <h2>What to do now</h2>
-      <p>For air that is {now.category.name}. If stations near you show worse air, follow the advice for that category.</p>
+      <p>For air that is {now.advice_category.name}{now.check?.warn ? ", based on what stations measured" : ""}. If stations near you show worse air, follow the advice for that category.</p>
       <dl className="advice">
         {now.advice.map((a) => (<div key={a.id}><dt>{a.title}</dt><dd>{a.text}</dd></div>))}
       </dl>

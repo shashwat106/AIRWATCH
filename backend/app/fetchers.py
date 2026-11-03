@@ -196,6 +196,26 @@ async def station_latest(city: City, stations: pd.DataFrame) -> Cached:
     return await cached_df(f"stations:{city.id}", 1800, go)
 
 
+async def station_recent(city: City, stations: pd.DataFrame) -> Cached:
+    """The last 3 days of hourly PM2.5 from this city's stored stations, through OpenAQ."""
+    async def go():
+        if not OPENAQ_API_KEY:
+            raise RuntimeError("OPENAQ_API_KEY not set")
+        start = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        rows = []
+        for row in stations.itertuples():
+            resp = await _get(f"{OPENAQ_URL}/sensors/{row.sensor}/hours", {"datetime_from": start, "limit": 100}, 30,
+                              {"X-API-Key": OPENAQ_API_KEY})
+            rows += [{"utc": x["period"]["datetimeFrom"]["utc"], "pm2_5": x["value"], "provider": row.provider, "station": row.station}
+                     for x in resp.json().get("results", []) if 0 < x["value"] < 1000]
+        if not rows:
+            raise RuntimeError("no recent station hours")
+        df = pd.DataFrame(rows)
+        df["time"] = pd.to_datetime(df.utc, utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None).dt.floor("h")
+        return df.drop(columns="utc")
+    return await cached_df(f"stations_recent:{city.id}", 1800, go)
+
+
 def history_path(kind: str, city_id: str):
     return HISTORY_DIR / f"{kind}_{city_id}.parquet"
 
