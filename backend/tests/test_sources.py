@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from ml.sources import (FireStats, angular_diff, bearing_deg, compass, crop_burning, distance_weight,
-                        dust, haversine_km, level, mean_wind, trapping, upwind_fires, vehicles)
+                        dust, haversine_km, level, mean_wind, top_cause, trapping, upwind_fires, vehicles)
 
 DELHI = (28.61, 77.21)
 AT = pd.Timestamp("2026-11-03 12:00")
@@ -131,3 +131,12 @@ def test_trapping_extremes():
 def test_levels_and_nan_safety():
     assert [level(s) for s in (0, 0.32, 0.33, 0.65, 0.66, 1)] == ["Low", "Low", "Medium", "Medium", "High", "High"]
     assert math.isnan(mean_wind(pd.Series([float("nan")]), pd.Series([float("nan")]))[0])
+
+
+def test_top_cause_needs_medium_and_skips_unscored():
+    scored = [{"id": "crop", "label": "Crop burning", "score": None},
+              {"id": "dust", "label": "Dust", "score": 0.4},
+              {"id": "weather", "label": "Weather", "score": 0.7}]
+    assert top_cause(scored)["id"] == "weather"
+    assert top_cause([{"id": "dust", "label": "Dust", "score": 0.32}]) is None
+    assert top_cause([{"id": "crop", "label": "Crop burning", "score": None}]) is None

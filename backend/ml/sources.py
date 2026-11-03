@@ -178,6 +178,15 @@ def trapping(wind_kmh: float, blh_m: float) -> Source:
                 {"wind_kmh": round(wind_kmh, 1), "boundary_layer_m": round(blh_m)})
 
 
+def top_cause(scored: list[dict], floor: float = 0.33) -> dict | None:
+    """The highest scoring source, if any reaches Medium. Below that we name no cause."""
+    known = [s for s in scored if s["score"] is not None and s["score"] >= floor]
+    if not known:
+        return None
+    best = max(known, key=lambda s: s["score"])
+    return {"id": best["id"], "label": best["label"], "score": best["score"]}
+
+
 def score_hour(frame: pd.DataFrame, at: pd.Timestamp, lat: float, lon: float,
                fires: pd.DataFrame | None, baseline: pd.DataFrame) -> list[dict]:
     """Score all sources for one hour.

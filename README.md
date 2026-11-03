@@ -107,7 +107,7 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 
 ## Limitations
 
-- **Modelled, not measured.** Headline AQI comes from a global model run through CPCB's method. It can differ a lot from nearby stations and is not an official reading.
+- **Modelled, not measured, and it can read low.** Headline AQI comes from a global model run through CPCB's method. It is not an official reading. In one spot check at about 3 AM on 4 Nov 2026, the model gave Delhi PM2.5 of 118 µg/m³ while the private sensor network behind aqi.in showed 365 µg/m³. That is one comparison with a network we have not validated, but it means our category may understate real air. The app warns about this next to the AQI and the advice.
 - **Source scores are estimates.** They are rules we chose, not calibrated against source-apportionment studies. They are separate scores and don't add up to 100%.
 - **Coarse model.** It can't see a single road or building site, so the vehicle and dust scores rest on broad signals.
 - **Gurugram and Noida share data.** Their air values matched in all 37,267 hours checked, so the two pages show the same numbers. The app says so on both pages.

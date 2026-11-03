@@ -109,3 +109,27 @@ dt { color: var(--dusk); }
 .loading { padding: 1.5rem 0; color: var(--dusk); }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* Added after comparing with other AQI dashboards */
+.when { margin-top: .5rem; font-weight: 700; }
+.next { margin-top: .6rem; padding-top: .6rem; border-top: 2px solid currentColor; font-weight: 700; }
+.scale { position: relative; padding-top: .9rem; }
+.scale-mark { position: absolute; top: 0; width: 0; height: 0; margin-left: -.5rem; border-left: .5rem solid transparent; border-right: .5rem solid transparent; border-top: .75rem solid var(--ink); }
+.scale-bar { display: flex; height: .9rem; border: 1px solid var(--ink); }
+.scale-ticks { position: relative; height: 1.5rem; color: var(--dusk); font-size: .875rem; }
+.scale-ticks span { position: absolute; transform: translateX(-50%); }
+.scale-ticks span:first-child { transform: none; }
+.scale-ticks span:last-child { transform: translateX(-100%); }
+.caution { margin-top: .75rem; padding: .6rem .75rem; background: var(--paper); border-left: 4px solid var(--ember); }
+.pollutants li { display: grid; grid-template-columns: 3.5rem 1fr auto; gap: .5rem; align-items: baseline; padding: .35rem 0; border-top: 1px solid var(--line); }
+.pollutants span { color: var(--dusk); min-width: 0; }
+.pollutants b { font: 700 1.15rem/1.3 var(--display); }
+.conditions { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: .75rem; }
+.conditions dd { font: 700 1.1rem/1.3 var(--display); }
+.weekdays, .calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.weekdays { margin-top: .75rem; color: var(--dusk); font-size: .875rem; text-align: center; }
+.day { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 3.1rem; padding: .15rem 0; border: 0; border-radius: 0; }
+.day b { font: 700 1rem/1.15 var(--display); }
+.day small { font-size: .8125rem; font-weight: 700; line-height: 1.1; }
+.day[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--ink); outline: 2px solid var(--paper); outline-offset: -5px; }
+.calendar + .readout { margin-top: .6rem; }

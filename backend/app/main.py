@@ -64,6 +64,8 @@ class Now(BaseModel):
     pm2_5: float | None
     pm10: float | None
     unit: str
+    pollutants: list[dict[str, Any]]
+    weather: dict[str, Any]
     source: str
     source_note: str
     shared_grid_with: str | None
@@ -125,6 +127,7 @@ class History(BaseModel):
     vs_recent: dict[str, Any]
     season: dict[str, Any]
     season_chart: list[dict[str, Any]]
+    calendar: list[dict[str, Any]]
     fire_link: dict[str, Any]
     notable: dict[str, Any]
     fire_note: str | None

@@ -11,8 +11,8 @@ import pandas as pd
 
 from ml import forecast as fc
 from ml import history as hist
-from ml.aqi import LABELS, aqi_series, category
-from ml.sources import compass, mean_wind, score_hour
+from ml.aqi import COLUMNS, LABELS, aqi_series, category, running_means, sub_index
+from ml.sources import compass, mean_wind, score_hour, top_cause
 
 from . import fetchers as f
 from .advice import ADVICE, DISCLAIMER
@@ -84,7 +84,7 @@ def aqi_to(air: pd.DataFrame, city_id: str, end: pd.Timestamp) -> pd.DataFrame:
 
 def official_stations(frame: pd.DataFrame) -> list[dict]:
     """Group data.gov.in rows by station. Station AQI uses CPCB's method on the feed's averages."""
-    from ml.aqi import overall, sub_index
+    from ml.aqi import overall
     names = {"PM2.5": "pm2_5", "PM10": "pm10", "NO2": "no2", "SO2": "so2", "OZONE": "o3", "CO": "co"}
     out = []
     value_col = "avg_value" if "avg_value" in frame.columns else "pollutant_avg"
@@ -116,8 +116,28 @@ async def official(city: City) -> dict:
             "source": "CPCB real-time feed via data.gov.in", "stale": res.stale}
 
 
+def pollutant_rows(air: pd.DataFrame, at: pd.Timestamp) -> list[dict]:
+    """Each pollutant on the averaging period CPCB uses, worst sub-index first."""
+    means = running_means(air.loc[at - pd.Timedelta(hours=30):at]).iloc[-1]
+    rows = []
+    for key in COLUMNS:
+        short = key in ("co", "o3")
+        rows.append({"id": key, "label": LABELS[key], "value": round(float(means[key]), 1 if key == "co" else 0),
+                     "unit": "mg/m³" if key == "co" else "µg/m³", "window": "8-hour" if short else "24-hour",
+                     "sub_index": sub_index(key, means[key])})
+    return sorted(rows, key=lambda r: -(r["sub_index"] or 0))
+
+
+def weather_now(wx: pd.DataFrame, at: pd.Timestamp) -> dict:
+    row = wx.loc[at]
+    direction = row["wind_direction_10m"]
+    return {"wind_kmh": row["wind_speed_10m"], "wind_from": None if pd.isna(direction) else compass(direction),
+            "humidity_pct": row["relative_humidity_2m"], "mixing_layer_m": row["boundary_layer_height"],
+            "rain_mm": row["precipitation"]}
+
+
 async def city_now(city: City) -> dict:
-    air, _, meta = await frames(city)
+    air, wx, meta = await frames(city)
     at = current_hour(air)
     series = aqi_to(air, city.id, at)
     row = series.loc[at]
@@ -127,7 +147,7 @@ async def city_now(city: City) -> dict:
     return clean({
         "city": city.name, "time": at.isoformat(), "aqi": aqi, "category": cat,
         "dominant": LABELS.get(row.dominant), "pm2_5": latest["pm2_5"], "pm10": latest["pm10"],
-        "unit": "µg/m³", "source": MODEL_SOURCE, "source_note": SOURCE_NOTE,
+        "unit": "µg/m³", "pollutants": pollutant_rows(air, at), "weather": weather_now(wx, at), "source": MODEL_SOURCE, "source_note": SOURCE_NOTE,
         "shared_grid_with": SHARED_GRID.get(city.id), "official": await official(city),
         "advice": ADVICE.get(cat["name"], []) if cat else [], "advice_note": DISCLAIMER, **meta,
     })
@@ -204,16 +224,68 @@ def _fires_daily(city_id: str, stamp: str) -> pd.Series | None:
     return hist.daily_upwind(fires, city.lat, city.lon, stored("wx", city_id), days)
 
 
+DAY_HOURS = (9, 14, 19)  # morning, afternoon, evening. Night alone always looks like trapping.
+
+
+def day_scores(city: City, air: pd.DataFrame, wx: pd.DataFrame, day: date, fires) -> list[dict]:
+    """A whole day's source scores: the mean of its morning, afternoon and evening scores."""
+    runs = []
+    for hour in DAY_HOURS:
+        at = pd.Timestamp(day) + pd.Timedelta(hours=hour)
+        frame = air.loc[at - pd.Timedelta(hours=72):at].join(wx, how="left")
+        runs.append(score_hour(frame, at, city.lat, city.lon, fires, air))
+    merged = []
+    for parts in zip(*runs):
+        scores = [p["score"] for p in parts]
+        mean = None if any(v is None for v in scores) else round(sum(scores) / len(scores), 2)
+        merged.append({"id": parts[0]["id"], "label": parts[0]["label"], "score": mean})
+    return merged
+
+
 def notable(city: City, air: pd.DataFrame, wx: pd.DataFrame, window: tuple[date, date], fires) -> list[dict]:
     days = hist.worst_days(_daily(city.id, str(air.index.max().date())), *window)
     for day in days:
         at = pd.Timestamp(day["date"]) + pd.Timedelta(hours=23)
-        frame = air.loc[at - pd.Timedelta(hours=72):at].join(wx, how="left")
-        scored = score_hour(frame, at, city.lat, city.lon, fires, air)
         day["dominant"] = LABELS.get(stored_aqi(city.id).dominant.get(at))
-        ranked = sorted((s for s in scored if s["score"] is not None), key=lambda s: -s["score"])
-        day["top_source"] = {"label": ranked[0]["label"], "score": ranked[0]["score"]} if ranked else None
+        cause = top_cause(day_scores(city, air, wx, date.fromisoformat(day["date"]), fires))
+        day["top_source"] = {"label": cause["label"], "score": cause["score"]} if cause else None
     return days
+
+
+_calendars: dict[tuple, list[dict]] = {}
+
+
+def season_calendar(city: City, air: pd.DataFrame, wx: pd.DataFrame, last_full: date, recent_fires) -> list[dict]:
+    """Each day of this season with its AQI and likely cause.
+
+    Crop burning is scored only when fire data covers that day's full 48-hour window. Otherwise it
+    is left unscored, because a missing record must not read as zero fires.
+    """
+    archive = archive_fires()
+    key = (city.id, last_full, archive is not None, recent_fires is not None)
+    if key in _calendars:
+        return _calendars[key]
+    fires = archive if archive is not None else recent_fires
+    covered_from = None if fires is None else fires.time.min() + pd.Timedelta(hours=48)
+    table = _daily(city.id, str(last_full))
+    dominant = stored_aqi(city.id).dominant
+    rows = []
+    start = hist.season_start(last_full)
+    for offset in range((last_full - start).days + 1):
+        day = start + timedelta(days=offset)
+        at = pd.Timestamp(day) + pd.Timedelta(hours=23)
+        ts = pd.Timestamp(day)
+        aqi = None if ts not in table.index or pd.isna(table.at[ts, "aqi"]) else int(table.at[ts, "aqi"])
+        entry = {"date": day.isoformat(), "aqi": aqi, "category": category_payload(aqi), "cause": None,
+                 "dominant": LABELS.get(dominant.get(at)), "crop_scored": False}
+        if aqi is not None:
+            morning = pd.Timestamp(day) + pd.Timedelta(hours=DAY_HOURS[0])
+            usable = fires if covered_from is not None and morning >= covered_from else None
+            entry["cause"] = top_cause(day_scores(city, air, wx, day, usable))
+            entry["crop_scored"] = usable is not None
+        rows.append(entry)
+    _calendars[key] = rows
+    return rows
 
 
 async def city_history(city: City) -> dict:
@@ -228,6 +300,7 @@ async def city_history(city: City) -> dict:
     fires_daily = _fires_daily(city.id, str(last_full))
     this_season, last_season = hist.season_windows(last_full)
     fires = archive_fires()
+    recent_fires, _ = await fire_frame()
     fire_note = None if fires_daily is not None else "Fire history needs the FIRMS archive, which needs a FIRMS key."
     return clean({
         "city": city.name, "as_of": at.isoformat(), "window": f"24 hours ending {at.strftime('%H:%M')} IST",
@@ -235,6 +308,7 @@ async def city_history(city: City) -> dict:
         "vs_recent": hist.recent_averages(now_table, today),
         "season": hist.season_comparison(daily, last_full, fires_daily),
         "season_chart": hist.season_lines(daily, last_full),
+        "calendar": season_calendar(city, air, wx, last_full, recent_fires),
         "fire_link": hist.fire_link(daily, fires_daily, *this_season),
         "notable": {"this_season": notable(city, air, wx, this_season, fires),
                     "last_season": notable(city, air, wx, last_season, fires)},
