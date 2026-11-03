@@ -149,7 +149,7 @@ async def fires_recent() -> Cached:
             except RuntimeError as exc:
                 log.warning("keyed FIRMS failed, using public feed: %s", exc)
         return _clean_fires(await _fires_public())
-    return await cached_df("fires_recent", 3600, go)
+    return await cached_df("fires_recent:keyed" if FIRMS_MAP_KEY else "fires_recent", 3600, go)
 
 
 async def fires_archive_chunk(source: str, day: date, days: int = 5) -> pd.DataFrame:

@@ -147,3 +147,40 @@ def test_hour_table_uses_the_same_window_each_day():
     assert list(out.index.strftime("%Y-%m-%d")) == ["2026-11-01", "2026-11-02", "2026-11-03"]
     assert out.loc["2026-11-03", "pm2_5"] == 200  # exactly the 24 h ending 14:00 on 3 Nov
     assert np.isnan(out.loc["2026-11-01", "pm2_5"])  # only 15 hours existed by then
+
+
+def test_missing_fire_record_is_unknown_not_zero():
+    t = table({"2026-11-03": 300, "2025-11-03": 150})
+    fires = pd.Series([40.0], index=pd.to_datetime(["2025-11-03"]))
+    res = compare_years(t, date(2026, 11, 3), fires)
+    assert res["day"]["upwind_fires"] is None and res["earlier"][0]["upwind_fires"] == 40
+
+
+def test_daily_upwind_is_unknown_on_calm_days_and_counts_on_windy_ones():
+    from ml.history import daily_upwind
+    idx = pd.date_range("2026-11-01", periods=48, freq="h")
+    wx = pd.DataFrame({"wind_speed_10m": [10.0] * 24 + [1.0] * 24, "wind_direction_10m": 315.0}, index=idx)
+    fires = pd.DataFrame({"latitude": [29.8, 29.8], "longitude": [75.9, 75.9], "confidence": "n",
+                          "time": pd.to_datetime(["2026-11-01 13:00", "2026-11-02 13:00"])})
+    out = daily_upwind(fires, 28.61, 77.21, wx, pd.to_datetime(["2026-11-01", "2026-11-02"]))
+    assert out.iloc[0] == 1 and np.isnan(out.iloc[1])
+
+
+def test_fire_words_only_names_weather_when_numbers_support_it():
+    from ml.history import fire_words
+    now = {"upwind_fires": 100, "mean_aqi": 200}
+    before = {"upwind_fires": 412, "mean_aqi": 150}
+    assert fire_words(now, before, 400, 600) == ("312 fewer upwind fire detections than the same dates last year "
+                                                 "(100 vs 412), yet AQI is higher. The mixing layer averaged 400 m "
+                                                 "against 600 m, so air had less room to disperse.")
+    assert fire_words(now, before, 600, 600).endswith("yet AQI is higher.")
+    assert fire_words({"upwind_fires": 500, "mean_aqi": 200}, before) == \
+        "88 more upwind fire detections than the same dates last year (500 vs 412)."
+    assert fire_words({"upwind_fires": None}, before) is None
+
+
+def test_season_stats_reports_days_the_fire_count_covers():
+    t = table({"2026-10-01": 200, "2026-10-02": 210, "2026-10-03": 220})
+    fires = pd.Series([5.0, float("nan"), 7.0], index=pd.to_datetime(["2026-10-01", "2026-10-02", "2026-10-03"]))
+    s = season_stats(t, date(2026, 10, 1), date(2026, 10, 3), fires)
+    assert s["upwind_fires"] == 12 and s["fire_days_counted"] == 2

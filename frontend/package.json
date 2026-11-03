@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@fontsource-variable/anek-latin": "^5.1.0",
-    "@fontsource/atkinson-hyperlegible": "^5.1.0",
     "maplibre-gl": "^4.7.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

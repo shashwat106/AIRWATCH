@@ -87,3 +87,14 @@ def test_decide_defaults_to_open_meteo_without_evidence():
     assert decide(good, bad)[0] == "ours"
     assert decide(bad, good)[0] == "open_meteo"
     assert decide(good, good)[0] == "open_meteo"
+
+
+def test_fire_series_counts_one_satellite_and_only_the_past():
+    from ml.forecast import fire_series
+    idx = pd.date_range("2026-11-01", periods=72, freq="h")
+    wx = pd.DataFrame({"wind_speed_10m": 10.0, "wind_direction_10m": 315.0}, index=idx)
+    at = pd.Timestamp("2026-11-02 12:00")
+    fires = pd.DataFrame({"latitude": [29.8, 29.8, 29.8], "longitude": [75.9, 75.9, 75.9],
+                          "time": [at - pd.Timedelta(hours=6), at - pd.Timedelta(hours=6), at + pd.Timedelta(hours=6)],
+                          "confidence": "n", "satellite": ["N", "N20", "N"]})
+    assert fire_series(fires, 28.61, 77.21, wx, pd.DatetimeIndex([at])).iloc[0] == 1

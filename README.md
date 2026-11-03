@@ -88,13 +88,13 @@ Test: trained on 60 days and tested on the 7 days after them (28 Oct to 3 Nov 20
 
 | City | AirWatch MAE | AirWatch RMSE | No-change MAE | No-change RMSE | Same hour yesterday MAE | Same hour yesterday RMSE |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Delhi | **20.80** | **26.12** | 27.31 | 36.03 | 26.26 | 34.69 |
+| Delhi | **20.64** | **25.45** | 27.31 | 36.03 | 26.26 | 34.69 |
 | Gurugram | **21.76** | **27.47** | 27.35 | 34.31 | 27.98 | 38.34 |
-| Noida | **22.11** | **28.51** | 27.35 | 34.31 | 27.98 | 38.34 |
-| Ghaziabad | **21.71** | **26.65** | 27.19 | 36.35 | 27.55 | 35.60 |
+| Noida | **20.30** | **26.90** | 27.35 | 34.31 | 27.98 | 38.34 |
+| Ghaziabad | **21.40** | **26.56** | 27.19 | 36.35 | 27.55 | 35.60 |
 | Chandigarh | **13.52** | **17.58** | 16.89 | 20.62 | 15.55 | 18.70 |
-| Ludhiana | **22.34** | **27.37** | 27.34 | 33.19 | 24.81 | 32.34 |
-| Lucknow | **16.40** | **23.77** | 19.02 | 28.52 | 23.51 | 31.47 |
+| Ludhiana | **21.83** | **26.77** | 27.34 | 33.19 | 24.81 | 32.34 |
+| Lucknow | **16.31** | **24.17** | 19.02 | 28.52 | 23.51 | 31.47 |
 | Kanpur | **16.27** | 25.27 | 17.11 | **25.10** | 22.55 | 30.14 |
 
 AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur, assuming no change has a slightly lower RMSE.
@@ -105,7 +105,7 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 - Open-Meteo keeps no old air-quality forecasts (`pm2_5_previous_day1` returned only nulls), so its forecast can't be tested on past days: it would be compared with itself. That's why the table uses simple baselines.
 - To compare fairly, we save live forecasts from both and score them once the hours have passed. Each city shows Open-Meteo's forecast unless ours has won on at least 12 live hours. Results are in `backend/ml/metrics.json`, and each city page says which forecast it's using and why.
 - The serving models are refitted on the latest 60 days, so they aren't the exact fits scored above.
-- The test didn't use the fire feature, because training on it needs the fire archive.
+- **The fire feature makes little difference.** Upwind fire counts lowered MAE in Delhi, Noida, Ghaziabad, Ludhiana and Lucknow, and raised it in Gurugram, Chandigarh and Kanpur, so those three leave it out. The table shows each city's better version. Choosing that way uses the test days, which flatters the results slightly. Gurugram and Noida share air data yet went opposite ways, which suggests much of this difference is noise.
 
 ## Data sources
 
@@ -114,7 +114,7 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 | [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api) | PM2.5, PM10, NO2, CO, SO2, O3, dust | From 4 Aug 2022, the first day with values for all 8 cities, checked live |
 | [Open-Meteo Weather and Archive APIs](https://open-meteo.com/) | Wind, humidity, rain, boundary layer | From 4 Aug 2022 |
 | [Open-Meteo Previous Runs API](https://open-meteo.com/en/docs/previous-runs-api) | Archived weather forecasts for honest testing | Last 71 days. No boundary-layer forecasts |
-| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) | VIIRS fire detections | Last 7 days from the public files, or last 14 and the archive with a key |
+| [NASA FIRMS](https://firms.modaps.eosdis.nasa.gov/) | VIIRS fire detections | Last 14 days from three satellites. History from Suomi NPP only: 25 Aug to 4 Nov 2026 (near-real-time), and 1 Oct to 4 Nov in 2024 and 2025 (final processed data) |
 | [CPCB via data.gov.in](https://www.data.gov.in/resource/real-time-air-quality-index-various-locations) | Official station readings | Live, needs a key |
 | [CPCB AQI method](https://airquality.cpcb.gov.in/ccr_docs/How_AQI_Calculated.pdf) | Breakpoints and rules | Cited in `backend/ml/aqi.py` |
 
@@ -129,6 +129,7 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 - **Seams in the past series.** It's stitched from separate model runs, and many of the largest hour-to-hour jumps fall near run times (around 05:30 and 17:30 IST).
 - **History starts in August 2022**, so there are only a few seasons to compare.
 - **The site is designed for desktop.** It works on phones, but the scroll chapters have not been tuned for them. Reduced-motion users get the finished state of each chapter without scroll animation.
+- **Fires and PM2.5 are only loosely linked here.** This season's correlation is mostly weak and at best moderate, and it doesn't prove cause. Season fire totals skip days too calm to tell upwind, and the app shows how many days were counted.
 - **Fire counts are detections.** One fire can be seen on several satellite passes, and cloud or thick smoke can hide fires. Zero detections today can just mean no satellite has passed yet.
 - **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
 - **Advice is general guidance**, not medical advice.

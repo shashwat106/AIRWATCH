@@ -223,7 +223,7 @@ function WhyCalendar({ days }: { days: CalendarDay[] }) {
           ? `${dateLabel(picked.date)}: AQI ${picked.aqi ?? "no data"}, ${picked.category?.name ?? "no data"}. Mostly ${picked.dominant ?? "unknown"}. ${picked.cause ? `Likely cause: ${picked.cause.label} (${picked.cause.score.toFixed(2)}).` : "No clear cause."}`
           : `Key: ${seen.map((id) => `${CAUSES[id].letter} ${CAUSES[id].label}`).join(", ") || "no clear causes yet"}. A dash means no clear cause.`}
       </p>
-      <p className="fine">Crop burning could be scored on {scored} of {days.length} days, because older fire records aren't loaded yet. Causes are estimates.</p>
+      <p className="fine">{scored < days.length ? `Crop burning could be scored on ${scored} of ${days.length} days, because fire records don't cover the rest. ` : ""}Causes are estimates.</p>
     </>
   );
 }
@@ -284,6 +284,7 @@ function Compared({ data }: { data: History }) {
         )}
       </dl>
       <h3>Fires and next-day PM2.5</h3>
+      {season.fire_summary && <p>{season.fire_summary}</p>}
       {data.fire_link.available ? (
         <>
           <p>{data.fire_link.summary}</p>

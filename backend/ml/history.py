@@ -65,13 +65,15 @@ def hour_table(air: pd.DataFrame, aqi: pd.Series, hour: int) -> pd.DataFrame:
 
 
 def daily_upwind(fires: pd.DataFrame, lat: float, lon: float, wx: pd.DataFrame, days: pd.DatetimeIndex) -> pd.Series:
-    """Upwind fire detections for each day, using that day's mean wind."""
+    """Upwind fire detections for each day, using that day's mean wind. Calm days are NaN."""
     counts = {}
     for day in days:
         hours = wx.loc[day:day + pd.Timedelta(hours=23)]
         speed, direction = mean_wind(hours["wind_speed_10m"], hours["wind_direction_10m"])
         end = day + pd.Timedelta(hours=23, minutes=59)
-        counts[day] = upwind_fires(fires, lat, lon, speed, direction, end, hours=24).upwind_count
+        stats = upwind_fires(fires, lat, lon, speed, direction, end, hours=24)
+        # With no usable wind, upwind has no meaning: the count is unknown, not zero.
+        counts[day] = float("nan") if stats.calm else stats.upwind_count
     return pd.Series(counts, dtype=float)
 
 
@@ -93,6 +95,11 @@ def ratio_words(now: float, then: float, what: str) -> str:
     return f"{what} is {(1 - ratio) * 100:.0f}% lower."
 
 
+def _fires_on(fires: pd.Series, day: date) -> int | None:
+    value = fires.get(pd.Timestamp(day))
+    return None if value is None or pd.isna(value) else int(value)
+
+
 def compare_years(table: pd.DataFrame, day: date, fires: pd.Series | None = None) -> dict:
     """The given complete day against the same date one and two years earlier."""
     today = _row(table, day)
@@ -107,10 +114,10 @@ def compare_years(table: pd.DataFrame, day: date, fires: pd.Series | None = None
         if today:
             then["summary"] = ratio_words(today["pm2_5"], then["pm2_5"], "PM2.5")
         if fires is not None:
-            then["upwind_fires"] = int(fires.get(pd.Timestamp(then_day), 0))
+            then["upwind_fires"] = _fires_on(fires, then_day)
         out["earlier"].append(then)
     if fires is not None and today:
-        today["upwind_fires"] = int(fires.get(pd.Timestamp(day), 0))
+        today["upwind_fires"] = _fires_on(fires, day)
     return out
 
 
@@ -139,10 +146,30 @@ def season_stats(table: pd.DataFrame, start: date, end: date, fires: pd.Series |
     for name, (lo, hi) in BAD_DAYS.items():
         stats[f"{name}_days"] = int(aqi.between(lo, hi).sum())
     stats["upwind_fires"] = None
+    stats["fire_days_counted"] = None
     if fires is not None:
-        stats["upwind_fires"] = int(fires.loc[pd.Timestamp(start):pd.Timestamp(end)].sum())
+        counted = fires.loc[pd.Timestamp(start):pd.Timestamp(end)].dropna()
+        stats["upwind_fires"] = int(counted.sum())
+        stats["fire_days_counted"] = int(len(counted))
     return stats
 
+
+def fire_words(now: dict, before: dict, mixing_now: float | None = None, mixing_before: float | None = None) -> str | None:
+    """Plain-words comparison of upwind fires. Weather is named only when the numbers support it."""
+    a, b = now.get("upwind_fires"), before.get("upwind_fires")
+    if a is None or b is None:
+        return None
+    gap = a - b
+    if gap == 0:
+        text = f"The same number of upwind fire detections as last year ({a:,})"
+    else:
+        text = f"{abs(gap):,} {'fewer' if gap < 0 else 'more'} upwind fire detections than the same dates last year ({a:,} vs {b:,})"
+    higher = (now.get("mean_aqi") or 0) > (before.get("mean_aqi") or 0)
+    if gap < 0 and higher:
+        text += ", yet AQI is higher"
+        if mixing_now and mixing_before and mixing_now < mixing_before * 0.95:
+            return f"{text}. The mixing layer averaged {mixing_now:,.0f} m against {mixing_before:,.0f} m, so air had less room to disperse."
+    return f"{text}."
 
 def season_comparison(table: pd.DataFrame, day: date, fires: pd.Series | None = None) -> dict:
     (a, b), (c, d) = season_windows(day)

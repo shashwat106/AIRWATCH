@@ -54,7 +54,8 @@ async def main() -> None:
     today = pd.Timestamp.now(tz="Asia/Kolkata").date()
     start = season_start(today)
     for back in (0, 1, 2):
-        first = date(start.year - back, 10, 1)
+        # This season starts earlier so the forecast can train on fires across its full 60 days.
+        first = date(start.year, 8, 25) if back == 0 else date(start.year - back, 10, 1)
         await season(first, same_date_in_year(today, today.year - back))
 
 

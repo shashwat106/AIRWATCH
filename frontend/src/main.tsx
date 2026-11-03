@@ -1,6 +1,4 @@
 import "@fontsource-variable/anek-latin/wdth.css";
-import "@fontsource/atkinson-hyperlegible/400.css";
-import "@fontsource/atkinson-hyperlegible/700.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles.css";
 

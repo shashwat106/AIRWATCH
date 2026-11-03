@@ -153,12 +153,19 @@ async def city_now(city: City) -> dict:
     })
 
 
+async def ours_forecast(city: City, air: pd.DataFrame, wx: pd.DataFrame, at: pd.Timestamp) -> pd.DataFrame | None:
+    """Run our model from `at`, with the fire feature when fire data is available."""
+    fires, _ = await fire_frame()
+    series = None if fires is None else fc.fire_series(fires, city.lat, city.lon, wx, pd.DatetimeIndex([at]))
+    return fc.run_models(city.id, air.loc[:at], wx, wx["boundary_layer_height"], at, series)
+
+
 async def city_forecast(city: City) -> dict:
     air, wx, meta = await frames(city)
     at = current_hour(air)
     hours = pd.date_range(at + pd.Timedelta(hours=1), periods=fc.HORIZON, freq="h")
     baseline = air.reindex(hours)
-    ours = fc.run_models(city.id, air.loc[:at], wx, wx["boundary_layer_height"], at)
+    ours = await ours_forecast(city, air, wx, at)
     metrics = fc.load_metrics().get("cities", {}).get(city.id, {})
     served = metrics.get("served", "open_meteo")
     reason = metrics.get("served_reason", "Not enough live forecast hours yet to show our model beats Open-Meteo.")
@@ -302,11 +309,20 @@ async def city_history(city: City) -> dict:
     fires = archive_fires()
     recent_fires, _ = await fire_frame()
     fire_note = None if fires_daily is not None else "Fire history needs the FIRMS archive, which needs a FIRMS key."
+    season = hist.season_comparison(daily, last_full, fires_daily)
+    if fires_daily is not None:
+        a, b = season["this_season"], season["last_season"]
+        layer = wx["boundary_layer_height"]
+        season["fire_summary"] = hist.fire_words(a, b, layer.loc[a["start"]:a["end"]].mean(), layer.loc[b["start"]:b["end"]].mean())
+        fire_note = (f"Fire counts come from one satellite (Suomi NPP). Days too calm to tell upwind are left out: "
+                     f"{a['fire_days_counted']} of {a['days_expected']} days counted this season, "
+                     f"{b['fire_days_counted']} of {b['days_expected']} last season. This year uses NASA's near-real-time "
+                     "data and earlier years its final processed data, so the two aren't identical.")
     return clean({
         "city": city.name, "as_of": at.isoformat(), "window": f"24 hours ending {at.strftime('%H:%M')} IST",
         "vs_years": hist.compare_years(now_table, today, fires_daily),
         "vs_recent": hist.recent_averages(now_table, today),
-        "season": hist.season_comparison(daily, last_full, fires_daily),
+        "season": season,
         "season_chart": hist.season_lines(daily, last_full),
         "calendar": season_calendar(city, air, wx, last_full, recent_fires),
         "fire_link": hist.fire_link(daily, fires_daily, *this_season),

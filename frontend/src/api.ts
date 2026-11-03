@@ -45,7 +45,7 @@ export type History = {
   city: string; as_of: string; window: string;
   vs_years: { day: DayRow | null; earlier: Earlier[] };
   vs_recent: { day: DayRow | null; last_7_days: Average; last_30_days: Average };
-  season: { this_season: Season; last_season: Season; summary: string | null };
+  season: { this_season: Season; last_season: Season; summary: string | null; fire_summary?: string | null };
   season_chart: { label: string; this_season: number | null; last_season: number | null }[];
   calendar: CalendarDay[];
   fire_link: { available: boolean; reason?: string; summary?: string; points?: { fires: number; pm2_5: number }[] };

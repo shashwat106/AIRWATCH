@@ -280,9 +280,9 @@ export function Fires({ data }: Props) {
   return (
     <section ref={section} className="chapter" style={{ height: "420vh" }}>
       <div className="stick s-fires">
-        <div ref={holder} className="s-map" role="img" aria-label="Map of fire detections over the last week" />
+        <div ref={holder} className="s-map" role="img" aria-label="Map of recent fire detections" />
         <aside className="s-panel">
-          <h2>Fires over the last week</h2>
+          <h2>Fires over the last {days.length} days</h2>
           {days.length ? (
             <>
               <p className="s-big"><span ref={dateEl}>{dateLabel(days[0].date)}</span></p>
@@ -340,7 +340,7 @@ export function Season({ data }: Props) {
   const clip = useRef<SVGRectElement>(null);
   const dot = useRef<SVGCircleElement>(null);
   const label = useRef<HTMLSpanElement>(null);
-  const summary = useRef<HTMLParagraphElement>(null);
+  const summary = useRef<HTMLDivElement>(null);
   const rows = history.season_chart;
   const W = 1000;
   const H = 310;
@@ -395,8 +395,11 @@ export function Season({ data }: Props) {
             <li><i style={{ background: "#0072B2" }} />This season</li>
             <li><i className="s-dash" />Last season</li>
           </ul>
-          <p ref={summary} className="s-reason">{history.season.summary}</p>
-          <p className="s-fine">Same model, same CPCB method, same dates. Data from {dateLabel(history.range.from, true)} to {dateLabel(history.range.to, true)}.</p>
+          <div ref={summary}>
+            <p className="s-reason">{history.season.summary} {history.season.fire_summary}</p>
+            {history.fire_link.available && <p className="s-link">{history.fire_link.summary}</p>}
+          </div>
+          <p className="s-fine">Same model and CPCB method, same dates, from {dateLabel(history.range.from, true)} to {dateLabel(history.range.to, true)}. {history.fire_note}</p>
         </div>
       </div>
     </section>
@@ -445,7 +448,7 @@ export function Calendar({ data }: Props) {
           <p ref={end} className="s-reason">
             {tally.length ? `${CAUSES[tally[0][0]].label} led on ${tally[0][1]} of ${days.length} days.` : "No clear cause stood out."} Still air often leads because it traps pollution from every other source. It doesn't create pollution itself.
           </p>
-          <p className="s-fine">Crop burning could be scored on {scored} of {days.length} days, because older fire records aren't loaded yet.</p>
+          {scored < days.length && <p className="s-fine">Crop burning could be scored on {scored} of {days.length} days, because fire records don't cover the rest.</p>}
         </div>
         <div className="s-grid" role="img" aria-label="Calendar of daily AQI and likely cause this season">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((w) => <span key={w} className="s-wd">{w}</span>)}

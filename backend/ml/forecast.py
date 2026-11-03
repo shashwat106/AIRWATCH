@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 
 from .aqi import sub_index
+from .sources import mean_wind, upwind_fires
 
 MODEL_DIR = Path(__file__).resolve().parent / "models"
 METRICS_PATH = Path(__file__).resolve().parent / "metrics.json"
@@ -62,6 +63,18 @@ def features(air: pd.DataFrame, wx_future: pd.DataFrame, blh: pd.Series, origins
         part["wind_sin"], part["wind_cos"] = np.sin(rad), np.cos(rad)
         frames.append(part)
     return pd.concat(frames, ignore_index=True)
+
+
+def fire_series(fires: pd.DataFrame, lat: float, lon: float, wx: pd.DataFrame, times: pd.DatetimeIndex) -> pd.Series:
+    """Upwind fire detections in the 48 hours before each time, using the mean wind of the prior day.
+    One satellite only, so training and serving count fires the same way."""
+    single = fires[fires.satellite.astype(str) == "N"]
+    counts = {}
+    for t in times:
+        hours = wx.loc[t - pd.Timedelta(hours=23):t]
+        speed, direction = mean_wind(hours["wind_speed_10m"], hours["wind_direction_10m"])
+        counts[t] = upwind_fires(single, lat, lon, speed, direction, t).upwind_count
+    return pd.Series(counts, dtype=float)
 
 
 def feature_columns(frame: pd.DataFrame) -> list[str]:
@@ -181,11 +194,13 @@ def train_final(city_id: str, air, wx_future, blh, fires_48h=None) -> None:
         fit(frame, air[target]).booster_.save_model(str(model_path(city_id, target)))
 
 
-def run_models(city_id: str, air, wx_future, blh, origin: pd.Timestamp) -> pd.DataFrame | None:
+def run_models(city_id: str, air, wx_future, blh, origin: pd.Timestamp, fires_48h=None) -> pd.DataFrame | None:
     """Forecast the next 24 hours from `origin`. Returns None if no model has been trained."""
     if not all(model_path(city_id, t).exists() for t in TARGETS):
         return None
-    frame = features(air, wx_future, blh, pd.DatetimeIndex([origin]))
+    frame = features(air, wx_future, blh, pd.DatetimeIndex([origin]), fires_48h)
+    if "fires_48h" not in frame:
+        frame["fires_48h"] = np.nan  # LightGBM treats this as unknown; ignored by models without the feature
     out = pd.DataFrame(index=pd.DatetimeIndex(frame.target_time))
     for target in TARGETS:
         booster = lgb.Booster(model_file=str(model_path(city_id, target)))

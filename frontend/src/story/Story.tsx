@@ -61,7 +61,12 @@ export function Story({ id }: { id: string }) {
     let live = true;
     setBundle(null);
     setError(null);
-    loadAll(id).then((b) => live && setBundle(b)).catch((e: Error) => live && setError(e.message));
+    window.scrollTo(0, 0);
+    loadAll(id).then((b) => {
+      if (!live) return;
+      setBundle(b);
+      window.scrollTo(0, 0);
+    }).catch((e: Error) => live && setError(e.message));
     return () => { live = false; };
   }, [id, attempt]);
 

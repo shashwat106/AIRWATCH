@@ -9,14 +9,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app import fetchers as f  # noqa: E402
 from app import service  # noqa: E402
 from app.config import CITIES  # noqa: E402
-from ml import forecast as fc  # noqa: E402
 
 
 async def save_ours(city) -> None:
     """Store our own forecast at the same moment, so both are judged on the same hours."""
     air, wx, _ = await service.frames(city)
     at = service.current_hour(air)
-    ours = fc.run_models(city.id, air.loc[:at], wx, wx["boundary_layer_height"], at)
+    ours = await service.ours_forecast(city, air, wx, at)
     if ours is not None:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%MZ")
         ours.to_parquet(f.SNAPSHOT_DIR / city.id / f"ours_{stamp}.parquet")
