@@ -351,6 +351,17 @@ async def map_view(day: date | None) -> dict:
                   "source": MODEL_SOURCE})
 
 
+async def fires_by_day() -> dict:
+    """Recent detections grouped by IST date, for the fires chapter."""
+    fires, meta = await fire_frame()
+    days = []
+    if fires is not None:
+        for day, rows in fires.groupby(fires.time.dt.date):
+            days.append({"date": day.isoformat(), "fires": [
+                {"lat": round(a, 3), "lon": round(b, 3)} for a, b in zip(rows.latitude, rows.longitude)]})
+    return clean({"days": days, "meta": meta})
+
+
 def health() -> dict:
     snapshots = sorted(p.name for p in (f.SNAPSHOT_DIR / "delhi").glob("[0-9]*.parquet"))
     return {"status": "ok", "time": now_ist().isoformat(timespec="seconds"),

@@ -1,0 +1,119 @@
+.story { background: var(--haze); color: var(--ink); }
+.story h1, .story h2 { font-family: var(--display); font-weight: 800; font-stretch: 112%; line-height: 1.04; letter-spacing: -.01em; margin: 0; }
+.story h1 { font-size: clamp(3rem, 8vw, 7.5rem); }
+.story h2 { font-size: clamp(2.2rem, 4.8vw, 4.5rem); }
+.story p { font-size: clamp(1.05rem, 1.5vw, 1.35rem); max-width: 60ch; }
+
+.chapter { position: relative; }
+.stick { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 5.5rem clamp(1.25rem, 6vw, 6rem) 2rem; }
+.s-wide { width: 100%; max-width: 76rem; margin: 0 auto; }
+.s-big { font: 700 clamp(1.3rem, 2.4vw, 2.2rem)/1.2 var(--display) !important; margin-top: .75rem; max-width: none !important; }
+.s-fine { margin-top: 1rem; color: var(--dusk); font-size: 1rem !important; }
+.s-reason { margin-top: 1rem; font-weight: 700; }
+.s-hide { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.s-wait { min-height: 100vh; display: grid; place-items: center; padding: 2rem; font: 700 1.5rem var(--display); }
+
+/* Top bar */
+.s-bar { position: fixed; z-index: 20; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 1.25rem; padding: .7rem clamp(1.25rem, 6vw, 6rem); background: var(--ink); color: var(--paper); }
+.s-bar strong { font: 800 1.3rem/1 var(--display); font-stretch: 115%; margin-right: auto; }
+.s-bar select { font: 700 1rem var(--body); padding: .3rem .4rem; background: var(--paper); color: var(--ink); border: 0; }
+.s-bar a { font-weight: 700; }
+.s-bar i { position: absolute; left: 0; right: 0; bottom: -4px; height: 4px; background: #ff9900; transform-origin: left; }
+
+/* Chapter 1 */
+.s-specks { background: rgb(207, 227, 238); }
+.s-specks canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.s-step { position: absolute; left: clamp(1.25rem, 6vw, 6rem); right: clamp(1.25rem, 6vw, 6rem); top: 50%; translate: 0 -50%; }
+.s-step p { margin-top: 1rem; font-weight: 700; }
+.s-step h1, .s-step h2 { max-width: 16ch; }
+.s-count { position: absolute; right: clamp(1.25rem, 6vw, 6rem); bottom: 2.5rem; margin: 0; max-width: none !important; font: 800 clamp(3rem, 8vw, 7rem)/1 var(--display) !important; text-align: right; }
+.s-count small { display: block; font: 700 1.1rem var(--body); }
+.s-when { font-size: 1.4rem !important; }
+.s-aqi { display: flex; align-items: baseline; gap: 1rem; margin: 0 !important; font-family: var(--display); max-width: none !important; }
+.s-aqi span { font-size: clamp(9rem, 26vw, 24rem); font-weight: 800; font-stretch: 125%; line-height: .95; letter-spacing: -.03em; }
+.s-aqi small { font-size: 2rem; font-weight: 800; }
+.s-cat { font: 800 clamp(2rem, 4vw, 3.5rem)/1.1 var(--display) !important; margin-top: 0 !important; }
+
+/* Chapter 2 */
+.s-today { background: var(--paper); justify-content: flex-start; }
+.s-head { position: relative; min-height: 11rem; }
+.s-over { position: absolute; inset: 0 0 auto 0; visibility: hidden; }
+.s-skyline { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 3px; margin-top: 1rem; border-bottom: 3px solid var(--ink); }
+.s-col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.s-barfill { width: 100%; transform: scaleY(0); transform-origin: bottom; border: 1px solid var(--ink); border-bottom: 0; }
+.s-sun { position: absolute; width: 3rem; height: 3rem; margin-left: -1.5rem; border-radius: 50%; background: #f7c948; border: 3px solid var(--ink); }
+.s-bracket { position: absolute; top: 0; bottom: -3px; border: 5px solid var(--ink); opacity: 0; pointer-events: none; }
+.s-hours { position: relative; height: 1.7rem; margin-top: .4rem; color: var(--dusk); }
+.s-hours span { position: absolute; white-space: nowrap; }
+
+/* Chapter 3 */
+.s-fires { padding: 0; }
+.s-map { position: absolute; inset: 0; }
+.s-panel { position: absolute; top: 5.5rem; left: clamp(1.25rem, 6vw, 6rem); width: min(26rem, calc(100% - 2.5rem)); padding: 1.5rem; background: var(--paper); border: 3px solid var(--ink); }
+.s-panel h2 { font-size: clamp(1.8rem, 2.8vw, 2.6rem) !important; }
+.s-tally { max-width: none !important; margin-top: .25rem; font: 800 clamp(3rem, 6vw, 5rem)/1 var(--display) !important; color: var(--ember); }
+.s-tally small { display: block; font: 700 1rem var(--body); color: var(--ink); }
+.s-pin { padding: .25rem .6rem; border: 2px solid var(--ink); font: 700 1.05rem var(--display); }
+
+/* Chapter 4 */
+.s-causes ul { margin-top: 1.5rem; }
+.s-causes li { padding: .7rem 0; border-top: 1px solid var(--line); }
+.s-causes li p { margin-top: .15rem; font-size: 1.05rem; }
+.s-cause-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 1rem; font-size: 1.25rem; }
+.s-cause-head strong { font-family: var(--display); }
+.s-track { height: 1rem; margin-top: .3rem; background: var(--paper); }
+.s-track i { display: block; height: 100%; background: var(--wind); transform: scaleX(0); transform-origin: left; }
+.s-track i.s-second { background: #a65a00; }
+
+/* Chapter 5 */
+.s-season { background: var(--paper); }
+.s-season svg { display: block; width: 100%; height: auto; max-height: 50vh; margin-top: .75rem; }
+.s-legend { display: flex; gap: 1.5rem; margin-top: .5rem; font-weight: 700; }
+.s-legend li { display: flex; align-items: center; gap: .5rem; }
+.s-legend i { width: 2rem; height: 4px; }
+.s-dash { background: repeating-linear-gradient(90deg, #a65a00 0 8px, transparent 8px 13px); }
+
+/* Chapter 6 */
+.s-cal { flex-direction: row; align-items: center; gap: clamp(2rem, 5vw, 5rem); }
+.s-cal-text { flex: 1 1 22rem; min-width: 0; }
+.s-key { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; margin-top: 1rem; font-size: 1.05rem; }
+.s-key b { display: inline-block; min-width: 1.2rem; }
+.s-grid { flex: 1.3 1 30rem; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; min-width: 0; }
+.s-wd { text-align: center; color: var(--dusk); font-weight: 700; }
+.s-day { position: relative; aspect-ratio: 1.25; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; line-height: 1.05; }
+.s-day small { font-size: .75rem; }
+.s-day b { font: 800 clamp(1rem, 1.7vw, 1.5rem)/1.1 var(--display); }
+.s-day em { font-style: normal; font-weight: 700; font-size: .9rem; }
+
+/* Chapter 7 */
+.s-trust { background: var(--ink); color: var(--paper); }
+.s-trust .s-track { background: #33444f; height: 1.4rem; margin: 0; }
+.s-compare { display: grid; grid-template-columns: auto 1fr auto; gap: .75rem 1rem; align-items: center; margin-top: 1.5rem; font-size: 1.15rem; }
+.s-points { margin-top: 2rem; font-size: clamp(1.1rem, 1.7vw, 1.5rem); }
+.s-points li { padding: .7rem 0; border-top: 1px solid #4a5a66; }
+
+/* Chapter 8 */
+.s-advice { background: var(--paper); }
+.s-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem 2.5rem; margin-top: 2rem; }
+.s-cards h3 { margin: 0 0 .25rem; font-size: clamp(1.4rem, 2vw, 1.9rem); }
+.s-foot { padding: 3rem clamp(1.25rem, 6vw, 6rem); background: var(--ink); color: var(--paper); }
+.s-foot a { margin-right: 1.5rem; font-weight: 700; font-size: 1.2rem; }
+.s-foot .s-fine { color: #c3cac3; }
+
+@media (max-width: 760px) {
+  .s-cal { flex-direction: column; justify-content: flex-start; overflow-y: auto; }
+  .s-grid, .s-cal-text { flex: none; width: 100%; }
+  .s-day small { display: none; }
+  .s-compare { grid-template-columns: 1fr auto; }
+  .s-compare .s-track { grid-column: 1 / -1; }
+  .s-bar a:last-of-type { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chapter { height: auto !important; }
+  .stick { position: static; height: auto; min-height: 100vh; overflow: visible; }
+  .s-step { position: static; translate: none; margin-bottom: 2rem; }
+  .s-over { position: static; }
+  .s-map { position: relative; height: 70vh; }
+  .s-panel { position: static; width: auto; margin: 1rem; }
+}

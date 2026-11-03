@@ -8,9 +8,11 @@
 
 AirWatch tells people in North India what the air is like in their city, what it will do in the next 24 hours, when the cleanest time to go out is, what is most likely causing it, and how today compares with the past.
 
-| Map with fires | City page |
+| Air fills to the real PM2.5 level | Best time outside |
 | --- | --- |
-| ![Map showing city AQI, fire detections and wind](docs/screenshots/home-fires.png) | ![City page with AQI, forecast, contributors and comparisons](docs/screenshots/city.png) |
+| ![Specks filling the sky, one per microgram of PM2.5](docs/screenshots/story-specks.png) | ![Skyline of the next 24 hours with the best window bracketed](docs/screenshots/story-best.png) |
+| **Fires appear day by day** | **What each day was about** |
+| ![Map of satellite fire detections over Punjab](docs/screenshots/story-fires.png) | ![Calendar of daily AQI and likely cause](docs/screenshots/story-calendar.png) |
 
 ## Problem
 
@@ -26,12 +28,25 @@ For Delhi, Gurugram, Noida, Ghaziabad, Chandigarh, Ludhiana, Lucknow and Kanpur:
 - **Compared with before:** today against last year and recent weeks, and this season against last, on the same dates.
 - **What to do:** general public guidance for the current category.
 
-A map shows city AQI, satellite fire detections and wind, with a date slider to watch them change.
+AirWatch is a scroll-driven site, and every animation is drawn from live data:
+
+| Chapter | What scrolling does |
+| --- | --- |
+| Specks | Fills the sky at 1 speck per µg/m³: the WHO guideline, India's standard, then the city's real level, ending on its AQI |
+| Today | Raises a skyline of the next 24 hours, then brackets the best window |
+| Fires | Moves the map towards the fires as real detections appear day by day |
+| Why | Fills each likely cause to its score, with its reason |
+| This season against last | Draws both seasons on the same dates |
+| Day by day | Lands each day of the season with its AQI and likely cause |
+| How far to trust this | Shows real test errors and the limits of the data |
+| What to do | Gives guidance for the current category |
+
+Compared with typical AQI dashboards, which stop at the number, AirWatch explains the cause and the best time to go out, and says how sure it is. A map with a date slider (`#/map`) and a full details page (`#/city/delhi`) are also included.
 
 ## Tech stack
 
 - **Backend and all AI/ML (Python):** FastAPI, httpx, pandas, pyarrow, LightGBM, pydantic, pytest
-- **Frontend:** React, Vite, TypeScript, MapLibre GL with OpenFreeMap tiles, Recharts, installable PWA
+- **Frontend:** React, Vite, TypeScript, a small hand-written scroll engine, canvas, SVG, MapLibre GL with OpenFreeMap tiles, Recharts, installable PWA
 - **Caching:** in-memory TTL plus parquet on disk, with the last good copy served and labelled if an upstream fails
 
 ## Setup and run
@@ -113,6 +128,7 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 - **Gurugram and Noida share data.** Their air values matched in all 37,267 hours checked, so the two pages show the same numbers. The app says so on both pages.
 - **Seams in the past series.** It's stitched from separate model runs, and many of the largest hour-to-hour jumps fall near run times (around 05:30 and 17:30 IST).
 - **History starts in August 2022**, so there are only a few seasons to compare.
+- **The site is designed for desktop.** It works on phones, but the scroll chapters have not been tuned for them. Reduced-motion users get the finished state of each chapter without scroll animation.
 - **Fire counts are detections.** One fire can be seen on several satellite passes, and cloud or thick smoke can hide fires. Zero detections today can just mean no satellite has passed yet.
 - **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
 - **Advice is general guidance**, not medical advice.

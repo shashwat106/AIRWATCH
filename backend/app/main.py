@@ -195,6 +195,21 @@ async def history(city_id: str):
     return await guarded(service.city_history(get_city(city_id)))
 
 
+class FireDay(BaseModel):
+    date: str
+    fires: list[dict[str, float]]
+
+
+class FireDays(BaseModel):
+    days: list[FireDay]
+    meta: dict[str, Any]
+
+
+@app.get("/api/fires", response_model=FireDays)
+async def fires():
+    return await guarded(service.fires_by_day())
+
+
 @app.get("/api/map", response_model=MapView)
 async def map_view(day: date | None = Query(None, alias="date", description="YYYY-MM-DD, within the last 14 days")):
     today = service.now_ist().date()

@@ -20,7 +20,7 @@ function Hero({ now, tomorrow }: { now: Now; tomorrow: number | null }) {
   const color = now.category?.color ?? "#FFFFFF";
   return (
     <header className="hero" style={{ background: color, color: textOn(now.category?.name) }}>
-      <a className="back" href="#/">All cities</a>
+      <a className="back" href="#/map">All cities</a>
       <h1>{now.city}</h1>
       <p className="when">Right now, 24-hour average</p>
       <p className="aqi"><span>{now.aqi ?? "No data"}</span>{now.aqi != null && <small>AQI</small>}</p>
@@ -334,7 +334,7 @@ export function CityPage({ id }: { id: string }) {
     <main className="city">
       {now.data ? <Hero now={now.data} tomorrow={forecast.data?.hours[forecast.data.hours.length - 1]?.aqi ?? null} /> : (
         <header className="hero plain">
-          <a className="back" href="#/">All cities</a>
+          <a className="back" href="#/map">All cities</a>
           {now.error ? <Problem message={now.error} retry={now.retry} /> : <Loading what="current air" />}
         </header>
       )}
