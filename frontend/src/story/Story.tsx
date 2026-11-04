@@ -2,7 +2,7 @@ import "./story.css";
 
 import { useEffect, useState } from "react";
 
-import { Forecast, History, Insights, load, Now, Sources } from "../api";
+import { Forecast, History, Insights, load, Now, Sources, useResource } from "../api";
 import { Problem } from "../parts";
 import { Advice, Calendar, Causes, Fires, KeyPoints, Next, Season, Specks, Today, Trust } from "./chapters";
 import { League, Planner } from "./more";
@@ -21,11 +21,11 @@ export type Bundle = {
 
 async function loadAll(id: string): Promise<Bundle> {
   const get = async <T,>(path: string) => (await load<T>(path)).data;
-  const [now, forecast, sources, history, insights, cities, fires] = await Promise.all([
+  const [now, forecast, sources, history, insights, cities] = await Promise.all([
     get<Now>(`/api/city/${id}/now`), get<Forecast>(`/api/city/${id}/forecast`), get<Sources>(`/api/city/${id}/sources`),
-    get<History>(`/api/city/${id}/history`), get<Insights>(`/api/city/${id}/insights`), get<Bundle["city"][]>("/api/cities"), get<{ days: Bundle["days"] }>("/api/fires"),
+    get<History>(`/api/city/${id}/history`), get<Insights>(`/api/city/${id}/insights`), get<Bundle["city"][]>("/api/cities"),
   ]);
-  return { id, now, forecast, sources, history, insights, city: cities.find((c) => c.id === id)!, days: fires.days };
+  return { id, now, forecast, sources, history, insights, city: cities.find((c) => c.id === id)!, days: [] };
 }
 
 function TopBar({ id }: { id: string }) {
@@ -60,6 +60,8 @@ export function Story({ id }: { id: string }) {
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  // Fires load on their own, so a slow fetch never holds up the rest of the page.
+  const fires = useResource<{ days: Bundle["days"] }>("/api/fires");
   useEffect(() => {
     let live = true;
     setBundle(null);
@@ -84,7 +86,7 @@ export function Story({ id }: { id: string }) {
           <KeyPoints data={bundle} />
           <Today data={bundle} />
           <Planner data={bundle} />
-          <Fires data={bundle} />
+          <Fires data={{ ...bundle, days: fires.data?.days ?? [] }} failed={!!fires.error} />
           <Causes data={bundle} />
           <League current={id} />
           <Season data={bundle} />

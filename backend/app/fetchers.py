@@ -118,14 +118,14 @@ async def _fires_keyed() -> pd.DataFrame:
     """Last 15 days from the keyed area API, in the 5-day chunks it allows."""
     bbox = ",".join(str(v) for v in FIRE_BBOX)
     today = pd.Timestamp.now(tz="Asia/Kolkata").date()
+    urls = [f"{FIRMS_AREA}/{FIRMS_MAP_KEY}/{src}/{bbox}/5/{(today - timedelta(days=back)).isoformat()}"
+            for src in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT") for back in (14, 9, 4)]
+    replies = await asyncio.gather(*(_get(url, timeout=90) for url in urls))
     frames = []
-    for src in ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"):
-        for back in (14, 9, 4):
-            start = (today - timedelta(days=back)).isoformat()
-            resp = await _get(f"{FIRMS_AREA}/{FIRMS_MAP_KEY}/{src}/{bbox}/5/{start}", timeout=90)
-            if not resp.text.startswith("latitude"):
-                raise RuntimeError(f"FIRMS said: {_redact(resp.text[:120])}")
-            frames.append(pd.read_csv(io.StringIO(resp.text)))
+    for resp in replies:
+        if not resp.text.startswith("latitude"):
+            raise RuntimeError(f"FIRMS said: {_redact(resp.text[:120])}")
+        frames.append(pd.read_csv(io.StringIO(resp.text)))
     return pd.concat(frames, ignore_index=True)
 
 

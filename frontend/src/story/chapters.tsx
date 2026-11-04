@@ -252,7 +252,7 @@ export function Today({ data }: Props) {
 }
 
 /** Chapter 3. Real fire detections appear day by day while the map moves towards them. */
-export function Fires({ data }: Props) {
+export function Fires({ data, failed }: Props & { failed: boolean }) {
   const { days, sources, now, city } = data;
   const smoke = data.insights.smoke;
   const section = useRef<HTMLElement>(null);
@@ -348,7 +348,7 @@ export function Fires({ data }: Props) {
               <p className="s-tally"><span ref={countEl}>0</span> <small>satellite detections so far</small></p>
               <p ref={reason} className="s-reason">{crop?.reason} Crop burning scores {crop?.level.toLowerCase()} right now.</p>
             </>
-          ) : <p>Fire data is unavailable right now.</p>}
+          ) : <p>{failed ? "Fire data is unavailable right now." : "Loading fire detections."}</p>}
           <p className="s-fine">NASA FIRMS, VIIRS. One fire can be seen on several passes, so these are detections, not fires.{smoke.length ? " Dashed lines join the biggest upwind groups of fires to the city. They show direction, not a smoke model." : ""}</p>
         </aside>
       </div>
