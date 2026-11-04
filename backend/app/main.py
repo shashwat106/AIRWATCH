@@ -1,8 +1,11 @@
 """AirWatch API."""
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 from collections import defaultdict, deque
+from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from typing import Any
 
@@ -16,7 +19,51 @@ from .config import CITIES, FRONTEND_ORIGIN, City
 
 RATE_LIMIT, RATE_WINDOW = 300, 60.0  # per IP; judges on one network can share an address
 
-app = FastAPI(title="AirWatch API", version="1.0")
+WARM_EVERY = 1200  # seconds between rebuilds; free hosts have little CPU, so visitors shouldn't wait for this work
+READY_FOR = 1800  # a prepared answer is served for up to this long
+log = logging.getLogger("airwatch.warm")
+_ready: dict[str, tuple[float, Any]] = {}
+
+
+async def remembered(key: str, work, refresh: bool = False):
+    """Serve a prepared answer if there is a recent one. Otherwise do the work and keep the result."""
+    hit = _ready.get(key)
+    if hit and not refresh and time.time() - hit[0] < READY_FOR:
+        return hit[1]
+    value = await work()
+    _ready[key] = (time.time(), value)
+    return value
+
+
+def warm_jobs() -> list[tuple[str, Any]]:
+    jobs: list[tuple[str, Any]] = [("fires", service.fires_by_day), ("league", service.league)]
+    for city in CITIES.values():
+        for name, build in (("now", service.city_now), ("forecast", service.city_forecast), ("sources", service.city_sources),
+                            ("insights", service.city_insights), ("history", service.city_history)):
+            jobs.append((f"{name}:{city.id}", lambda build=build, city=city: build(city)))
+    return jobs
+
+
+async def warm_forever() -> None:
+    await asyncio.sleep(15)  # let the host's first health check pass
+    while True:
+        for key, work in warm_jobs():
+            try:
+                await remembered(key, work, refresh=True)
+            except Exception as exc:  # one bad upstream must not stop the rest; visitors still get a live attempt
+                log.warning("warm %s failed: %s", key, type(exc).__name__)
+            await asyncio.sleep(0.5)  # leave room for real visitors between jobs
+        await asyncio.sleep(WARM_EVERY)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    task = asyncio.create_task(warm_forever())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="AirWatch API", version="1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[FRONTEND_ORIGIN], allow_methods=["GET"], allow_headers=["*"])
 _hits: dict[str, deque] = defaultdict(deque)
 
@@ -181,22 +228,26 @@ def cities():
 
 @app.get("/api/city/{city_id}/now", response_model=Now)
 async def now(city_id: str):
-    return await guarded(service.city_now(get_city(city_id)))
+    city = get_city(city_id)
+    return await guarded(remembered(f"now:{city.id}", lambda: service.city_now(city)))
 
 
 @app.get("/api/city/{city_id}/forecast", response_model=Forecast)
 async def forecast(city_id: str):
-    return await guarded(service.city_forecast(get_city(city_id)))
+    city = get_city(city_id)
+    return await guarded(remembered(f"forecast:{city.id}", lambda: service.city_forecast(city)))
 
 
 @app.get("/api/city/{city_id}/sources", response_model=Sources)
 async def sources(city_id: str):
-    return await guarded(service.city_sources(get_city(city_id)))
+    city = get_city(city_id)
+    return await guarded(remembered(f"sources:{city.id}", lambda: service.city_sources(city)))
 
 
 @app.get("/api/city/{city_id}/history", response_model=History)
 async def history(city_id: str):
-    return await guarded(service.city_history(get_city(city_id)))
+    city = get_city(city_id)
+    return await guarded(remembered(f"history:{city.id}", lambda: service.city_history(city)))
 
 
 class Insights(BaseModel):
@@ -225,7 +276,8 @@ class FireDays(BaseModel):
 
 @app.get("/api/city/{city_id}/insights", response_model=Insights)
 async def insights(city_id: str):
-    return await guarded(service.city_insights(get_city(city_id)))
+    city = get_city(city_id)
+    return await guarded(remembered(f"insights:{city.id}", lambda: service.city_insights(city)))
 
 
 class League(BaseModel):
@@ -243,7 +295,7 @@ class Scoreboard(BaseModel):
 
 @app.get("/api/league", response_model=League)
 async def league():
-    return await guarded(service.league())
+    return await guarded(remembered("league", service.league))
 
 
 @app.get("/api/scoreboard", response_model=Scoreboard)
@@ -253,7 +305,7 @@ def scoreboard():
 
 @app.get("/api/fires", response_model=FireDays)
 async def fires():
-    return await guarded(service.fires_by_day())
+    return await guarded(remembered("fires", service.fires_by_day))
 
 
 @app.get("/api/map", response_model=MapView)
