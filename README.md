@@ -119,7 +119,7 @@ AirWatch has the lowest MAE in all 8 cities and the lowest RMSE in 7. In Kanpur,
 
 - The "truth" here is Open-Meteo's own past series, which comes from a global model, not from stations.
 - Open-Meteo keeps no old air-quality forecasts (`pm2_5_previous_day1` returned only nulls), so its forecast can't be tested on past days: it would be compared with itself. That's why the table uses simple baselines.
-- To compare fairly, we save live forecasts from both and score them once the hours have passed. Each city shows Open-Meteo's forecast unless ours has won on at least 12 live hours. Results are in `backend/ml/metrics.json`, and each city page says which forecast it's using and why.
+- To compare fairly, we save live forecasts from both and score them once the hours have passed. Each city shows Open-Meteo's forecast unless ours has won on at least 12 live hours. On the 14 hours scored so far (one forecast run, 4 Nov 2026), ours had the lower error in Delhi, Gurugram and Noida, and Open-Meteo in the other 5, so each city serves its winner. That is a very small test. Results are in `backend/ml/metrics.json`, and each city page says which forecast it's using and why.
 - The serving models are refitted on the latest 60 days, so they aren't the exact fits scored above.
 - **The fire feature makes little difference.** Upwind fire counts lowered MAE in Delhi, Noida, Ghaziabad, Ludhiana and Lucknow, and raised it in Gurugram, Chandigarh and Kanpur, so those three leave it out. The table shows each city's better version. Choosing that way uses the test days, which flatters the results slightly. Gurugram and Noida share air data yet went opposite ways, which suggests much of this difference is noise.
 
