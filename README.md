@@ -2,9 +2,8 @@
 
 **Neural Storm 2026, Green Planet track. Problem statement GP-01: Air Quality Monitoring & Source Attribution.**
 
-**Team:** _[team name]_. **Members:** _[member names]_
-
-**Live app:** https://airwatcher.vercel.app **API:** https://airwatch-api-z08r.onrender.com/api/health
+**Team:** LOSERSS. **Members:** SHASHWAT
+**Live app:** https://airwatcher.vercel.app 
 
 AirWatch tells people in North India what the air is like in their city, what it will do in the next 24 hours, when the cleanest time to go out is, what is most likely causing it, and how today compares with the past.
 
@@ -180,4 +179,4 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 
 **Frontend on Vercel:** import the repo, set the root directory to `frontend`, and add `VITE_API_URL` (your Render URL, no trailing slash).
 
-Render's free tier sleeps when idle, so the first request can take up to a minute. A free scheduled ping to `/api/health` every 10 minutes keeps it awake. A background task prepares every city's data ahead of visitors, so pages stay fast once it has run. Stored history is in the repo, so re-run `backfill.py` and commit to keep it current.
+
