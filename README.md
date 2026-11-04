@@ -8,6 +8,8 @@
 
 AirWatch tells people in North India what the air is like in their city, what it will do in the next 24 hours, when the cleanest time to go out is, what is most likely causing it, and how today compares with the past.
 
+**[Watch the 1-minute pitch video](docs/airwatch-pitch.mp4)**
+
 | Air fills to the real PM2.5 level | Best time outside |
 | --- | --- |
 | ![Specks filling the sky, one per microgram of PM2.5](docs/screenshots/story-specks.png) | ![Skyline of the next 24 hours with the best window bracketed](docs/screenshots/story-best.png) |

@@ -11,3 +11,10 @@ backend/data/cache/
 
 .playwright-mcp/
 .claude/
+
+# Video working files
+video/frames/
+video/node_modules/
+video/renders/
+demo/
+video/
