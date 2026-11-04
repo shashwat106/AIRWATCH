@@ -140,3 +140,19 @@ def test_top_cause_needs_medium_and_skips_unscored():
     assert top_cause(scored)["id"] == "weather"
     assert top_cause([{"id": "dust", "label": "Dust", "score": 0.32}]) is None
     assert top_cause([{"id": "crop", "label": "Crop burning", "score": None}]) is None
+
+
+def test_smoke_clusters_keep_upwind_groups_only_and_rank_them():
+    from ml.sources import smoke_clusters
+    big = [(29.8, 75.9)] * 5
+    small = [(29.0, 76.5)] * 2
+    downwind = [(27.5, 78.5)] * 9
+    res = smoke_clusters(fires_at(big + small + downwind), *DELHI, wind_kmh=11, wind_from=315, at=AT)
+    assert [c["count"] for c in res] == [5, 2]
+    assert 150 < res[0]["km"] < 200
+
+
+def test_smoke_clusters_empty_when_calm_or_no_fires():
+    from ml.sources import smoke_clusters
+    assert smoke_clusters(fires_at([(29.8, 75.9)]), *DELHI, wind_kmh=1, wind_from=315, at=AT) == []
+    assert smoke_clusters(fires_at([(29.8, 75.9)], when=AT - pd.Timedelta(hours=60)), *DELHI, wind_kmh=11, wind_from=315, at=AT) == []

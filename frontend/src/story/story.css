@@ -163,3 +163,42 @@
 
 .s-alert { max-width: 46rem !important; padding: .7rem 1rem; background: var(--paper); color: var(--ink); border-left: 8px solid var(--ink); font-size: 1.15rem !important; }
 .s-hero .s-aqi span { font-size: clamp(8rem, min(24vw, 34vh), 22rem); }
+
+/* Should I go out? */
+.s-plan { background: var(--haze); }
+.s-choices { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
+.s-choices button { min-height: 3rem; padding: 0 1.25rem; border: 3px solid var(--ink); background: transparent; color: var(--ink); font: 700 1.1rem var(--display); }
+.s-choices button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.s-answer { margin-top: 2rem; }
+.s-answer b { display: block; font: 800 clamp(2.4rem, 5vw, 4.6rem)/1.05 var(--display); font-stretch: 112%; }
+
+/* League */
+.s-league { background: var(--paper); }
+.s-league ol { list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.s-league li { display: grid; grid-template-columns: 11rem 1fr 15rem 15rem; gap: 1rem; align-items: center; padding: .4rem 0; font-size: 1.05rem; border-top: 1px solid var(--line); }
+.s-league li.here { font-weight: 700; }
+.s-league li a { font-weight: 700; }
+.s-lbar { height: 1.5rem; background: var(--haze); }
+.s-lbar i { display: block; height: 100%; border-right: 2px solid var(--ink); transform: scaleX(0); transform-origin: left; }
+
+.s-changed { max-width: none !important; margin-top: .75rem; padding: .6rem .9rem; background: var(--paper); border-left: 6px solid var(--ink); }
+.s-causes li { padding: .5rem 0; }
+
+/* Accuracy */
+.s-acc { max-width: 76rem; margin: 0 auto; padding: 2rem clamp(1.25rem, 6vw, 3rem) 4rem; }
+.s-acc h1 { font: 800 clamp(2.6rem, 5.5vw, 5rem)/1.05 var(--display); font-stretch: 112%; margin-top: 1rem; }
+.s-acc h2 { font: 800 clamp(1.7rem, 3vw, 2.6rem)/1.1 var(--display); margin: 2.5rem 0 .5rem; }
+.s-lead { font-size: 1.35rem; margin-top: .5rem; }
+.s-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+.s-stats div { padding-top: .75rem; border-top: 4px solid var(--ink); }
+.s-stats b { display: block; font: 800 clamp(2rem, 3.4vw, 3rem)/1.1 var(--display); }
+.s-scroll { overflow-x: auto; margin-top: 1rem; }
+.s-acc table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: 1.05rem; }
+.s-acc th, .s-acc td { padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--line); }
+.s-acc thead th { font-family: var(--display); vertical-align: bottom; }
+.s-acc td.low { font-weight: 700; color: var(--ember); }
+
+@media (max-width: 760px) {
+  .s-league li { grid-template-columns: 1fr 1fr; }
+  .s-lbar { grid-column: 1 / -1; order: 3; }
+}

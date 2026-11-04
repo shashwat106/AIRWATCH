@@ -3,7 +3,9 @@
 The correction (48-hour recent gap, 18-hour lag, full strength) was fixed before these cities were
 tested. A city must pass both tests to use it. Run from anywhere.
 """
+import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -26,6 +28,7 @@ def gap(model, real, window=48, lag=18):
     return model * (top / bottom).clip(0.4, 3.0).fillna(1.0)
 
 
+by_city = {}
 total = {"days": 0, "fired": 0, "fired_right": 0, "under_before": 0, "under_after": 0, "over_before": 0, "over_after": 0}
 for city in CITIES.values():
     path = f.history_path("station", city.id)
@@ -40,6 +43,7 @@ for city in CITIES.values():
     print(f"{city.id}: {len(real)} station hours from {real.index.min().date()}")
     if res:
         print("   warning:", res)
+        by_city[city.id] = res
         for key in total:
             total[key] += res[key]
     passed = []
@@ -56,3 +60,4 @@ for city in CITIES.values():
               f"under {raw['under_warn_days']} -> {fixed['under_warn_days']}, over {raw['over_warn_days']} -> {fixed['over_warn_days']}, pass {ok}")
     print("   correction verdict:", "PASSES BOTH" if all(passed) else "does not pass")
 print("ALL CITIES warning:", total)
+w.RESULTS_PATH.write_text(json.dumps({"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "cities": by_city, "total": total}, indent=1), encoding="utf-8")

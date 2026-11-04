@@ -1,6 +1,7 @@
 """Upstream data fetchers. Every request is logged with its URL and parameters (keys redacted)."""
 from __future__ import annotations
 
+import asyncio
 import io
 import json
 import logging
@@ -184,8 +185,10 @@ async def station_latest(city: City, stations: pd.DataFrame) -> Cached:
         if not OPENAQ_API_KEY:
             raise RuntimeError("OPENAQ_API_KEY not set")
         rows = []
-        for row in stations.itertuples():
-            resp = await _get(f"{OPENAQ_URL}/locations/{row.location}/latest", timeout=30, headers={"X-API-Key": OPENAQ_API_KEY})
+        items = list(stations.itertuples())
+        replies = await asyncio.gather(*(_get(f"{OPENAQ_URL}/locations/{row.location}/latest", timeout=30,
+                                              headers={"X-API-Key": OPENAQ_API_KEY}) for row in items))
+        for row, resp in zip(items, replies):
             for item in resp.json().get("results", []):
                 if item["sensorsId"] == row.sensor and 0 < item["value"] < 1000:
                     rows.append({"station": row.station, "provider": row.provider, "distance_km": row.distance_km,
@@ -203,9 +206,10 @@ async def station_recent(city: City, stations: pd.DataFrame) -> Cached:
             raise RuntimeError("OPENAQ_API_KEY not set")
         start = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
         rows = []
-        for row in stations.itertuples():
-            resp = await _get(f"{OPENAQ_URL}/sensors/{row.sensor}/hours", {"datetime_from": start, "limit": 100}, 30,
-                              {"X-API-Key": OPENAQ_API_KEY})
+        items = list(stations.itertuples())
+        replies = await asyncio.gather(*(_get(f"{OPENAQ_URL}/sensors/{row.sensor}/hours", {"datetime_from": start, "limit": 100}, 30,
+                                              {"X-API-Key": OPENAQ_API_KEY}) for row in items))
+        for row, resp in zip(items, replies):
             rows += [{"utc": x["period"]["datetimeFrom"]["utc"], "pm2_5": x["value"], "provider": row.provider, "station": row.station}
                      for x in resp.json().get("results", []) if 0 < x["value"] < 1000]
         if not rows:

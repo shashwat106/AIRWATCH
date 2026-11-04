@@ -6,6 +6,9 @@ number. It says so plainly instead, and advice follows whichever is worse. Measu
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pandas as pd
 
 from .aqi import CATEGORIES, category, sub_index
@@ -14,6 +17,11 @@ WINDOW_HOURS = 24
 MIN_HOURS = 16  # CPCB's minimum for a sub-index
 MAX_AGE_HOURS = 36  # older readings say little about today
 NAMES = [name for name, _ in CATEGORIES]
+RESULTS_PATH = Path(__file__).resolve().parent / "warning_results.json"
+
+
+def load_results() -> dict:
+    return json.loads(RESULTS_PATH.read_text(encoding="utf-8")) if RESULTS_PATH.exists() else {}
 
 
 def rank(aqi: float | None) -> int:
@@ -22,15 +30,16 @@ def rank(aqi: float | None) -> int:
 
 
 def latest_mean(hourly: pd.Series, now: pd.Timestamp) -> tuple[float, pd.Timestamp] | None:
-    """Mean of the 24 hours ending at the newest reading, if that reading is recent and the window is full enough."""
-    series = hourly.dropna()
-    if series.empty:
-        return None
-    end = series.index.max()
-    if now - end > pd.Timedelta(hours=MAX_AGE_HOURS):
-        return None
-    window = series.loc[end - pd.Timedelta(hours=WINDOW_HOURS - 1):end]
-    return (float(window.mean()), end) if len(window) >= MIN_HOURS else None
+    """Mean of the most recent 24-hour window with enough readings. CPCB's feed arrives in batches with
+    gaps, so the newest reading alone may not have a full window behind it."""
+    series = hourly.dropna().sort_index()
+    for end in reversed(series.index):
+        if now - end > pd.Timedelta(hours=MAX_AGE_HOURS):
+            return None
+        window = series.loc[end - pd.Timedelta(hours=WINDOW_HOURS - 1):end]
+        if len(window) >= MIN_HOURS:
+            return float(window.mean()), end
+    return None
 
 
 def check(sources: dict[str, pd.Series], model_aqi: int | None, now: pd.Timestamp) -> dict | None:

@@ -96,6 +96,7 @@ class Forecast(BaseModel):
     hours: list[ForecastHour]
     best_time: dict[str, Any] | None
     timing: dict[str, Any] | None
+    plans: list[dict[str, Any]]
     best_time_note: str
     metrics: dict[str, Any]
     source: str
@@ -205,6 +206,8 @@ class Insights(BaseModel):
     outlook: dict[str, Any] | None
     limits: dict[str, Any] | None
     validation: dict[str, Any] | None
+    changed: dict[str, Any] | None
+    smoke: list[dict[str, Any]]
     source: str
     fetched_at: str
     stale: bool
@@ -223,6 +226,29 @@ class FireDays(BaseModel):
 @app.get("/api/city/{city_id}/insights", response_model=Insights)
 async def insights(city_id: str):
     return await guarded(service.city_insights(get_city(city_id)))
+
+
+class League(BaseModel):
+    cities: list[dict[str, Any]]
+    source: str
+    time: str
+
+
+class Scoreboard(BaseModel):
+    cities: list[dict[str, Any]]
+    warning_total: dict[str, Any] | None
+    generated_at: str | None
+    note: str
+
+
+@app.get("/api/league", response_model=League)
+async def league():
+    return await guarded(service.league())
+
+
+@app.get("/api/scoreboard", response_model=Scoreboard)
+def scoreboard():
+    return service.scoreboard()
 
 
 @app.get("/api/fires", response_model=FireDays)

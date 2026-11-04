@@ -143,3 +143,67 @@ def timing_saving(pm: pd.Series, start: str, end: str) -> dict | None:
                 "summary": "Timing makes little difference today: the air stays much the same through the day."}
     return {"best_pm": round(best), "worst_pm": round(float(worst)), "ratio": round(ratio, 1),
             "summary": f"The day's worst 2 hours have about {ratio:.1f}× the PM2.5 of this window ({float(worst):.0f} vs {best:.0f} µg/m³)."}
+
+
+ACTIVITIES = [("walk", "Morning walk", 7, 1), ("school", "School run", 8, 1), ("sport", "Cricket or sport", 16, 2),
+              ("evening", "Evening walk", 19, 1)]
+
+
+def clock_label(hour: int) -> str:
+    return "12 pm" if hour == 12 else "12 am" if hour == 0 else f"{hour} am" if hour < 12 else f"{hour - 12} pm"
+
+
+def verdict(index: float) -> str:
+    return ("Go ahead" if index <= 100 else "Fine for most people" if index <= 200
+            else "Keep it short" if index <= 300 else "Better indoors today")
+
+
+def plan_activities(pm: pd.Series, index: pd.Series) -> list[dict]:
+    """For each activity: the cleanest slot in the next 24 hours, and what moving from the usual time saves."""
+    awake = pm[(pm.index.hour >= 6) & (pm.index.hour < 22)].dropna()
+    plans = []
+    for key, label, usual_hour, length in ACTIVITIES:
+        slots = []
+        for start in awake.index:
+            hours = [start + pd.Timedelta(hours=i) for i in range(length)]
+            if all(h in awake.index for h in hours):
+                slots.append((float(awake.loc[hours].mean()), start))
+        usual = next((s for s in slots if s[1].hour == usual_hour), None)
+        if not slots or usual is None:
+            continue
+        best_pm, best_start = min(slots, key=lambda s: s[0])
+        hours = [best_start + pd.Timedelta(hours=i) for i in range(length)]
+        saving = (1 - best_pm / usual[0]) * 100 if usual[0] > 0 else 0.0
+        if best_start == usual[1]:
+            words = f"Your usual {clock_label(usual_hour)} is already the cleanest time."
+        elif saving < 10:
+            words = "Timing makes little difference for this one."
+        else:
+            words = (f"Moving it from {clock_label(usual_hour)} to {clock_label(best_start.hour)} means about {saving:.0f}% "
+                     f"less PM2.5 in the air around you ({best_pm:.0f} vs {usual[0]:.0f} µg/m³).")
+        plans.append({"id": key, "label": label, "usual": clock_label(usual_hour), "best": clock_label(best_start.hour),
+                      "date": best_start.date().isoformat(), "best_pm": round(best_pm), "usual_pm": round(usual[0]),
+                      "saving_pct": round(saving), "verdict": verdict(float(index.reindex(hours).mean())), "summary": words})
+    return plans
+
+
+def what_changed(air: pd.DataFrame, wx: pd.DataFrame, at: pd.Timestamp, fires_now: int | None, fires_before: int | None) -> dict | None:
+    """The last 24 hours against the 24 before. It lists what moved and doesn't claim cause."""
+    day = pd.Timedelta(hours=23)
+    recent, before = slice(at - day, at), slice(at - pd.Timedelta(hours=47), at - pd.Timedelta(hours=24))
+    pm_now, pm_before = air["pm2_5"].loc[recent].mean(), air["pm2_5"].loc[before].mean()
+    if pd.isna(pm_now) or pd.isna(pm_before) or pm_before <= 0:
+        return None
+    change = (pm_now / pm_before - 1) * 100
+    head = (f"PM2.5 is about the same as the day before ({pm_now:.0f} vs {pm_before:.0f} µg/m³)." if abs(change) < 10 else
+            f"PM2.5 is {abs(change):.0f}% {'higher' if change > 0 else 'lower'} than the day before ({pm_now:.0f} vs {pm_before:.0f} µg/m³).")
+    moved = []
+    for name, unit, column in (("Wind", "km/h", "wind_speed_10m"), ("The mixing layer", "m", "boundary_layer_height")):
+        a, b = wx[column].loc[recent].mean(), wx[column].loc[before].mean()
+        if b > 0 and abs(a / b - 1) >= 0.2:
+            moved.append(f"{name} {'rose' if a > b else 'fell'} from {b:,.0f} to {a:,.0f} {unit}.")
+    if fires_now is not None and fires_before is not None and abs(fires_now - fires_before) >= max(20, 0.2 * fires_before):
+        moved.append(f"Upwind fire detections {'rose' if fires_now > fires_before else 'fell'} from {fires_before:,} to {fires_now:,}.")
+    if not moved:
+        moved.append("Wind, mixing layer and upwind fires barely moved, so this data doesn't show why.")
+    return {"change_pct": round(change), "summary": head, "moved": moved}

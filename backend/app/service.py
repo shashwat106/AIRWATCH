@@ -15,7 +15,7 @@ from ml import insights as ins
 from ml import validation as val
 from ml import warning as warn
 from ml.aqi import COLUMNS, LABELS, aqi_series, category, running_means, sub_index
-from ml.sources import compass, mean_wind, score_hour, top_cause
+from ml.sources import compass, mean_wind, score_hour, smoke_clusters, top_cause, upwind_fires
 
 from . import fetchers as f
 from .advice import ADVICE, DISCLAIMER
@@ -225,9 +225,10 @@ async def city_forecast(city: City) -> dict:
     if best:
         best["category"] = category_payload(best["mean_index"])
         timing = ins.timing_saving(chosen.pm2_5, best["start"], best["end"])
+    plans = ins.plan_activities(chosen.pm2_5, index)
     return clean({
         "city": city.name, "issued": at.isoformat(), "served": served, "served_reason": reason, "hours": rows,
-        "best_time": best, "timing": timing, "best_time_note": "Ranked on hourly PM2.5 and PM10, not the 24-hour official AQI.",
+        "best_time": best, "timing": timing, "plans": plans, "best_time_note": "Ranked on hourly PM2.5 and PM10, not the 24-hour official AQI.",
         "metrics": metrics, "source": "Open-Meteo" if served == "open_meteo" else "the AirWatch model", **meta,
     })
 
@@ -396,8 +397,17 @@ async def city_insights(city: City) -> dict:
     history_air, history_wx = stored("air", city.id), stored("wx", city.id)
     last_full = history_air.index.max().date()
     table = _daily(city.id, str(last_full))
+    fires, _ = await fire_frame()
+    speed, direction = mean_wind(wx["wind_speed_10m"].loc[at - pd.Timedelta(hours=23):at], wx["wind_direction_10m"].loc[at - pd.Timedelta(hours=23):at])
+    fires_now = fires_before = None
+    smoke: list[dict] = []
+    if fires is not None:
+        fires_now = upwind_fires(fires, city.lat, city.lon, speed, direction, at, hours=24).upwind_count
+        fires_before = upwind_fires(fires, city.lat, city.lon, speed, direction, at - pd.Timedelta(hours=24), hours=24).upwind_count
+        smoke = smoke_clusters(fires, city.lat, city.lon, speed, direction, at)
     return clean({
         "city": city.name, "levers": ins.weather_levers(history_air, history_wx),
+        "changed": ins.what_changed(air, wx, at, fires_now, fires_before), "smoke": smoke,
         "relief": ins.relief_ahead(wx, at), "outlook": ins.winter_outlook(table["aqi"], last_full, city.name),
         "limits": ins.days_over_limit(table, last_full, city.name),
         "validation": validation_for(city, history_air),
@@ -447,6 +457,37 @@ async def fires_by_day() -> dict:
             days.append({"date": day.isoformat(), "fires": [
                 {"lat": round(a, 3), "lon": round(b, 3)} for a, b in zip(rows.latitude, rows.longitude)]})
     return clean({"days": days, "meta": meta})
+
+
+async def league() -> dict:
+    """Every city's AQI now, worst first, with what stations measured beside it."""
+    async def one(city: City) -> dict:
+        air, _, _ = await frames(city)
+        at = current_hour(air)
+        row = aqi_to(air, city.id, at).loc[at]
+        aqi = None if pd.isna(row.aqi) else int(row.aqi)
+        check = await measured_check(city, aqi)
+        return {"id": city.id, "name": city.name, "aqi": aqi, "category": category_payload(aqi), "dominant": LABELS.get(row.dominant),
+                "check": check, "has_stations": stored_stations(city.id) is not None, "shared_grid_with": SHARED_GRID.get(city.id)}
+    # One city at a time: firing them together trips OpenAQ's rate limit, and a rejected call must not read as "no stations".
+    rows = [await one(city) for city in CITIES.values()]
+    rows.sort(key=lambda r: -(r["aqi"] or 0))
+    return clean({"cities": rows, "source": MODEL_SOURCE, "time": now_ist().isoformat(timespec="minutes")})
+
+
+def scoreboard() -> dict:
+    """Every accuracy result in one place, including the cities we can't check."""
+    results = warn.load_results()
+    metrics = fc.load_metrics().get("cities", {})
+    rows = []
+    for city in CITIES.values():
+        forecast = metrics.get(city.id, {})
+        rows.append({"id": city.id, "name": city.name, "stations": validation_for(city, stored("air", city.id)),
+                     "warning": results.get("cities", {}).get(city.id), "served": forecast.get("served", "open_meteo"),
+                     "ours_live": forecast.get("ours_live"), "open_meteo_live": forecast.get("open_meteo_live"),
+                     "ours_test": forecast.get("ours"), "no_change_test": forecast.get("persistence")})
+    return clean({"cities": rows, "warning_total": results.get("total"), "generated_at": results.get("generated_at"),
+                  "note": "Stations are the nearest CPCB monitors to each city point, through OpenAQ."})
 
 
 def health() -> dict:

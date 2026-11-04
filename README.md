@@ -15,6 +15,8 @@ AirWatch tells people in North India what the air is like in their city, what it
 | ![Map of satellite fire detections over Punjab](docs/screenshots/story-fires.png) | ![Calendar of daily AQI and likely cause](docs/screenshots/story-calendar.png) |
 | **Warning when stations measured worse** | **How our numbers tested** |
 | ![Warning shown under the AQI when stations measured worse air](docs/screenshots/story-warning.png) | ![Forecast error and worst hours against CPCB stations](docs/screenshots/story-trust.png) |
+| **Should I go out?** | **Accuracy scoreboard** |
+| ![Activity planner with best time and saving](docs/screenshots/story-plan.png) | ![Scoreboard of the model against stations](docs/screenshots/accuracy.png) |
 | **What past winters did next** | **This season against last** |
 | ![Bars showing most days above AQI 300 came after this date](docs/screenshots/story-next.png) | ![Lines comparing this season and last on the same dates](docs/screenshots/story-season.png) |
 
@@ -39,8 +41,10 @@ AirWatch is a scroll-driven site, and every animation is drawn from live data:
 | Specks | Fills the sky at 1 speck per µg/m³: the WHO guideline, India's standard, then the city's real level, ending on its AQI |
 | Four things to know | Shows the main insights right after the AQI |
 | Today | Raises a skyline of the next 24 hours, then brackets the best window |
-| Fires | Moves the map towards the fires as real detections appear day by day |
-| Why | Fills each likely cause to its score, with its reason |
+| Should I go out? | Pick an activity to get the best slot, and what moving from your usual time saves |
+| Fires | Moves the map towards the fires as real detections appear day by day, then draws likely smoke paths from the biggest upwind groups |
+| Why | Shows what changed since yesterday, then fills each likely cause to its score, with its reason |
+| How the cities compare | Ranks all 8 cities, with what stations measured beside each |
 | This season against last | Draws both seasons on the same dates |
 | Day by day | Lands each day of the season with its AQI and likely cause |
 | What happens next | Shows what has cleared the air before, whether that's in the forecast, and how past winters unfolded from this date |
@@ -53,6 +57,8 @@ Insights are worked out per city from its own record, and a city only gets a cla
 - **What would clear the air:** PM2.5 on still days against windy days, and the day after rain, paired with the forecast.
 - **What timing saves:** the best window against the day's worst 2 hours.
 - **Days over the limit:** days over India's standard and the WHO guideline, against the same dates in earlier years.
+
+An **accuracy scoreboard** (`#/accuracy`) puts every check in one place, including where the model falls short.
 
 Compared with typical AQI dashboards, which stop at the number, AirWatch explains the cause and the best time to go out, and says how sure it is. A map with a date slider (`#/map`) and a full details page (`#/city/delhi`) are also included.
 
@@ -163,6 +169,7 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 - **History starts in August 2022**, so there are only a few seasons to compare.
 - **The site is designed for desktop.** It works on phones, but the scroll chapters have not been tuned for them. Reduced-motion users get the finished state of each chapter without scroll animation.
 - **Fires and PM2.5 are only loosely linked here.** This season's correlation is mostly weak and at best moderate, and it doesn't prove cause. Season fire totals skip days too calm to tell upwind, and the app shows how many days were counted.
+- **Smoke paths are straight lines.** They join the biggest upwind fire groups to the city to show direction. They are not a smoke transport model.
 - **Fire counts are detections.** One fire can be seen on several satellite passes, and cloud or thick smoke can hide fires. Zero detections today can just mean no satellite has passed yet.
 - **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
 - **Advice is general guidance**, not medical advice.

@@ -364,3 +364,27 @@
 {"at": "2026-11-04T11:26:53+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 30.9, "longitude": 75.86, "hourly": "pm2_5,pm10", "timezone": "Asia/Kolkata", "forecast_days": 3}, "status": 200}
 {"at": "2026-11-04T11:26:54+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 26.85, "longitude": 80.95, "hourly": "pm2_5,pm10", "timezone": "Asia/Kolkata", "forecast_days": 3}, "status": 200}
 {"at": "2026-11-04T11:26:56+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 26.45, "longitude": 80.33, "hourly": "pm2_5,pm10", "timezone": "Asia/Kolkata", "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235985/hours", "params": {"datetime_from": "2026-11-01T11:42:48Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12236259/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235187/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235951/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235101/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12328443/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/14258988/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12236806/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235522/hours", "params": {"datetime_from": "2026-11-01T11:42:48Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12234708/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235976/hours", "params": {"datetime_from": "2026-11-01T11:42:47Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:54+00:00", "url": "https://api.openaq.org/v3/sensors/12235478/hours", "params": {"datetime_from": "2026-11-01T11:42:48Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T11:42:59+00:00", "url": "https://api.openaq.org/v3/locations/301/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:42:59+00:00", "url": "https://api.openaq.org/v3/locations/5570/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:42:59+00:00", "url": "https://api.openaq.org/v3/locations/10825/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:02+00:00", "url": "https://api.openaq.org/v3/locations/5598/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:02+00:00", "url": "https://api.openaq.org/v3/locations/6980/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:02+00:00", "url": "https://api.openaq.org/v3/locations/6960/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:08+00:00", "url": "https://api.openaq.org/v3/locations/233415/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:08+00:00", "url": "https://api.openaq.org/v3/locations/2583/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:08+00:00", "url": "https://api.openaq.org/v3/locations/10914/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:14+00:00", "url": "https://api.openaq.org/v3/locations/5659/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:14+00:00", "url": "https://api.openaq.org/v3/locations/7140/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T11:43:14+00:00", "url": "https://api.openaq.org/v3/locations/3409318/latest", "params": {}, "status": 200}

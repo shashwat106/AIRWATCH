@@ -19,7 +19,7 @@ function rgb(hex: string) {
 }
 
 const mix = (a: number[], b: number[], t: number) => `rgb(${a.map((v, i) => Math.round(lerp(v, b[i], t))).join(",")})`;
-const show = (el: HTMLElement | null, on: number) => {
+export const show = (el: HTMLElement | null, on: number) => {
   if (!el) return;
   el.style.opacity = String(on);
   el.style.transform = `translateY(${(1 - on) * 24}px)`;
@@ -254,6 +254,7 @@ export function Today({ data }: Props) {
 /** Chapter 3. Real fire detections appear day by day while the map moves towards them. */
 export function Fires({ data }: Props) {
   const { days, sources, now, city } = data;
+  const smoke = data.insights.smoke;
   const section = useRef<HTMLElement>(null);
   const holder = useRef<HTMLDivElement>(null);
   const engine = useRef<maplibregl.Map | null>(null);
@@ -292,6 +293,20 @@ export function Fires({ data }: Props) {
         id: "fires", type: "circle", source: "fires", filter: ["<=", ["get", "day"], -1],
         paint: { "circle-color": "#C8321E", "circle-opacity": 0.75, "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 2, 9, 5] },
       });
+      instance.addSource("smoke", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: smoke.map((c) => ({
+            type: "Feature" as const, properties: { count: c.count },
+            geometry: { type: "LineString" as const, coordinates: [[c.lon, c.lat], [city.lon, city.lat]] },
+          })),
+        },
+      });
+      instance.addLayer({
+        id: "smoke", type: "line", source: "smoke",
+        paint: { "line-color": "#1C2A33", "line-opacity": 0, "line-dasharray": [2, 1.5], "line-width": ["interpolate", ["linear"], ["get", "count"], 1, 1.5, 100, 5] },
+      });
       loaded.current = true;
     });
     const pin = document.createElement("div");
@@ -305,7 +320,7 @@ export function Fires({ data }: Props) {
       instance.remove();
       engine.current = null;
     };
-  }, [city, days, now]);
+  }, [city, days, now, smoke]);
 
   useProgress(section, (p) => {
     const m = engine.current;
@@ -318,6 +333,7 @@ export function Fires({ data }: Props) {
       if (countEl.current) countEl.current.textContent = whole(p < 0.1 ? 0 : totals[i]);
     }
     show(reason.current, span(p, 0.82, 0.9));
+    if (m && loaded.current) m.setPaintProperty("smoke", "line-opacity", span(p, 0.84, 0.94) * 0.85);
   });
 
   return (
@@ -333,7 +349,7 @@ export function Fires({ data }: Props) {
               <p ref={reason} className="s-reason">{crop?.reason} Crop burning scores {crop?.level.toLowerCase()} right now.</p>
             </>
           ) : <p>Fire data is unavailable right now.</p>}
-          <p className="s-fine">NASA FIRMS, VIIRS. One fire can be seen on several passes, so these are detections, not fires.</p>
+          <p className="s-fine">NASA FIRMS, VIIRS. One fire can be seen on several passes, so these are detections, not fires.{smoke.length ? " Dashed lines join the biggest upwind groups of fires to the city. They show direction, not a smoke model." : ""}</p>
         </aside>
       </div>
     </section>
@@ -343,6 +359,7 @@ export function Fires({ data }: Props) {
 /** Chapter 4. Each likely cause fills to its score, one after another. */
 export function Causes({ data }: Props) {
   const { sources } = data;
+  const changed = data.insights.changed;
   const section = useRef<HTMLElement>(null);
   const fills = useRef<(HTMLElement | null)[]>([]);
   const rows = useRef<(HTMLLIElement | null)[]>([]);
@@ -360,7 +377,7 @@ export function Causes({ data }: Props) {
       <div className="stick s-causes">
         <div className="s-wide">
           <h2>Why it's like this</h2>
-          <p>{sources.note}</p>
+          {changed && <p className="s-changed"><b>Since yesterday:</b> {changed.summary} {changed.moved.join(" ")}</p>}
           <ul>
             {ranked.map((s, i) => (
               <li key={s.id} ref={(e) => { rows.current[i] = e; }}>
@@ -370,6 +387,7 @@ export function Causes({ data }: Props) {
               </li>
             ))}
           </ul>
+          <p className="s-fine">{sources.note}</p>
         </div>
       </div>
     </section>

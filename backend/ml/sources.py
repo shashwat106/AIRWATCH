@@ -101,6 +101,26 @@ def upwind_fires(fires: pd.DataFrame, lat: float, lon: float, wind_kmh: float, w
     return stats
 
 
+def smoke_clusters(fires: pd.DataFrame, lat: float, lon: float, wind_kmh: float, wind_from: float,
+                   at: pd.Timestamp, top: int = 5) -> list[dict]:
+    """The biggest groups of upwind fire detections, on a half-degree grid, for drawing likely smoke paths."""
+    if math.isnan(wind_kmh) or wind_kmh < CALM_KMH:
+        return []
+    recent = fires[(fires.time <= at) & (fires.time > at - pd.Timedelta(hours=WINDOW_HOURS))]
+    if recent.empty:
+        return []
+    km = haversine_km(recent.latitude.values, recent.longitude.values, lat, lon)
+    to_city = bearing_deg(recent.latitude.values, recent.longitude.values, lat, lon)
+    upwind = recent[(km <= RADIUS_KM) & (angular_diff(to_city, (wind_from + 180.0) % 360.0) <= HALF_ANGLE)]
+    if upwind.empty:
+        return []
+    cells = upwind.groupby([(upwind.latitude * 2).round() / 2, (upwind.longitude * 2).round() / 2]).agg(
+        count=("time", "size"), lat=("latitude", "mean"), lon=("longitude", "mean"))
+    biggest = cells.sort_values("count", ascending=False).head(top)
+    return [{"lat": round(float(r.lat), 3), "lon": round(float(r.lon), 3), "count": int(r["count"]),
+             "km": round(float(haversine_km(r.lat, r.lon, lat, lon)))} for _, r in biggest.iterrows()]
+
+
 @dataclass
 class Source:
     id: str

@@ -64,3 +64,10 @@ def test_backtest_only_uses_readings_known_at_the_time():
 def test_backtest_needs_enough_days():
     idx = pd.date_range("2026-01-01", periods=24 * 5, freq="h")
     assert backtest(pd.Series(40.0, index=idx), pd.Series(np.full(len(idx), 20.0), index=idx)) is None
+
+
+def test_latest_mean_steps_back_over_a_gap_in_the_feed():
+    full = hourly(100, end=NOW - pd.Timedelta(hours=20), hours=24)
+    newest = hourly(300, end=NOW, hours=2)  # a fresh batch after a gap, too short to average
+    mean, end = latest_mean(pd.concat([full, newest]), NOW)
+    assert mean == 100 and end == NOW - pd.Timedelta(hours=20)

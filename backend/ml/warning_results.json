@@ -1,0 +1,68 @@
+{
+ "generated_at": "2026-11-04T11:42:41+00:00",
+ "cities": {
+  "delhi": {
+   "days": 354,
+   "fired": 67,
+   "fired_right": 58,
+   "under_before": 72,
+   "under_after": 16,
+   "over_before": 211,
+   "over_after": 226
+  },
+  "gurugram": {
+   "days": 355,
+   "fired": 79,
+   "fired_right": 66,
+   "under_before": 81,
+   "under_after": 21,
+   "over_before": 191,
+   "over_after": 211
+  },
+  "noida": {
+   "days": 355,
+   "fired": 96,
+   "fired_right": 82,
+   "under_before": 100,
+   "under_after": 22,
+   "over_before": 217,
+   "over_after": 240
+  },
+  "ghaziabad": {
+   "days": 355,
+   "fired": 101,
+   "fired_right": 84,
+   "under_before": 105,
+   "under_after": 32,
+   "over_before": 166,
+   "over_after": 192
+  },
+  "chandigarh": {
+   "days": 355,
+   "fired": 51,
+   "fired_right": 42,
+   "under_before": 50,
+   "under_after": 13,
+   "over_before": 237,
+   "over_after": 252
+  },
+  "lucknow": {
+   "days": 355,
+   "fired": 28,
+   "fired_right": 12,
+   "under_before": 21,
+   "under_after": 9,
+   "over_before": 232,
+   "over_after": 249
+  }
+ },
+ "total": {
+  "days": 2129,
+  "fired": 422,
+  "fired_right": 344,
+  "under_before": 429,
+  "under_after": 113,
+  "over_before": 1254,
+  "over_after": 1370
+ }
+}

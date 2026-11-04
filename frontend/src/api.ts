@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const BASE = import.meta.env.VITE_API_URL ?? "";
 // Raise this whenever API shapes change, so an old saved copy is never read by newer code.
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
 
 export type Category = { name: string; color: string };
 export type Station = { station: string; provider?: string; distance_km?: number; pm2_5?: number; time?: string; aqi?: number | null; category?: Category | null };
@@ -21,10 +21,14 @@ export type ForecastHour = {
   time: string; pm2_5: number | null; pm10: number | null; aqi: number | null; hourly_index: number | null;
   open_meteo_pm2_5: number | null; ours_pm2_5: number | null;
 };
+export type Plan = {
+  id: string; label: string; usual: string; best: string; date: string; best_pm: number; usual_pm: number; saving_pct: number; verdict: string; summary: string;
+};
 export type Forecast = {
   city: string; issued: string; served: string; served_reason: string; hours: ForecastHour[];
   best_time: { start: string; end: string; mean_index: number; category: Category } | null; best_time_note: string;
   timing: { best_pm: number; worst_pm: number; ratio: number; summary: string } | null;
+  plans: Plan[];
   metrics: { ours?: Score; persistence?: Score; same_hour_yesterday?: Score; test_period?: string[] }; source: string;
 };
 export type SourceScore = { id: string; label: string; score: number | null; level: string; reason: string };
@@ -40,8 +44,24 @@ export type Season = {
   poor_days: number; very_poor_days: number; severe_days: number; upwind_fires: number | null;
 };
 export type Notable = { date: string; aqi: number; pm2_5: number; category: string; dominant: string | null; top_source: { label: string; score: number } | null };
+type Check = { warn: boolean; category: Category };
+export type LeagueData = {
+  source: string; time: string;
+  cities: { id: string; name: string; aqi: number | null; category: Category | null; dominant: string | null; check: Check | null; has_stations: boolean }[];
+};
+type WarningResult = { days: number; fired: number; fired_right: number; under_before: number; under_after: number; over_before: number; over_after: number };
+export type ScoreboardData = {
+  note: string; generated_at: string | null; warning_total: WarningResult | null;
+  cities: {
+    id: string; name: string; served: string; warning: WarningResult | null;
+    stations: { real_pm: number; model_pm: number; worst_real: number; worst_model: number; understates_peaks: boolean; daily_r: number } | null;
+    ours_live: Score | null; open_meteo_live: Score | null;
+  }[];
+};
 export type Insights = {
   city: string; source: string;
+  changed: { change_pct: number; summary: string; moved: string[] } | null;
+  smoke: { lat: number; lon: number; count: number; km: number }[];
   levers: {
     still_pm: number; still_days: number; windy_pm: number; windy_days: number; summary: string;
     rain: { days: number; next_day_ratio: number; summary: string } | null;

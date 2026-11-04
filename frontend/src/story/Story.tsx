@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Forecast, History, Insights, load, Now, Sources } from "../api";
 import { Problem } from "../parts";
 import { Advice, Calendar, Causes, Fires, KeyPoints, Next, Season, Specks, Today, Trust } from "./chapters";
+import { League, Planner } from "./more";
 import { clamp } from "./scroll";
 
 export const CITY_NAMES: Record<string, string> = {
@@ -47,6 +48,7 @@ function TopBar({ id }: { id: string }) {
         </select>
       </label>
       <button type="button" className="s-jump" onClick={() => document.getElementById("insights")?.scrollIntoView()}>Insights</button>
+      <a href="#/accuracy">Accuracy</a>
       <a href="#/map">Map</a>
       <a href={`#/city/${id}`}>Full details</a>
       <i style={{ transform: `scaleX(${progress})` }} />
@@ -81,8 +83,10 @@ export function Story({ id }: { id: string }) {
           <Specks data={bundle} />
           <KeyPoints data={bundle} />
           <Today data={bundle} />
+          <Planner data={bundle} />
           <Fires data={bundle} />
           <Causes data={bundle} />
+          <League current={id} />
           <Season data={bundle} />
           <Calendar data={bundle} />
           <Next data={bundle} />

@@ -145,3 +145,57 @@ def test_timing_ignores_night_hours_and_handles_no_data():
     pm = hourly([900, 900, 100, 100, 50, 50], start="2026-11-04 04:00")
     assert timing_saving(pm, "2026-11-04T08:00:00", "2026-11-04T10:00:00")["worst_pm"] == 100
     assert timing_saving(pm, "2027-01-01T08:00:00", "2027-01-01T10:00:00") is None
+
+
+def day_series(values, start="2026-11-05 06:00"):
+    return pd.Series(values, index=pd.date_range(start, periods=len(values), freq="h"), dtype=float)
+
+
+def test_plan_finds_best_slot_and_saving():
+    from ml.insights import plan_activities
+    pm = day_series([100, 200, 200, 200, 200, 200, 200, 50, 50, 200, 200, 200, 200, 200, 200, 200])
+    plans = {p["id"]: p for p in plan_activities(pm, pm)}
+    walk = plans["walk"]  # usual 7 am at 200, best 1 pm at 50
+    assert (walk["best"], walk["usual_pm"], walk["best_pm"], walk["saving_pct"]) == ("1 pm", 200, 50, 75)
+    assert walk["summary"].startswith("Moving it from 7 am to 1 pm means about 75% less PM2.5")
+    assert walk["verdict"] == "Go ahead"
+    assert plans["sport"]["best"] == "1 pm"  # a 2-hour slot
+
+
+def test_plan_says_when_usual_time_is_best_or_timing_barely_matters():
+    from ml.insights import plan_activities
+    pm = day_series([100, 20, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100])
+    assert plan_activities(pm, pm)[0]["summary"] == "Your usual 7 am is already the cleanest time."
+    flat = day_series([100] * 16)
+    flat.iloc[5] = 95
+    assert plan_activities(flat, flat)[0]["summary"] == "Timing makes little difference for this one."
+
+
+def test_plan_ignores_night_hours():
+    from ml.insights import plan_activities
+    pm = day_series([1, 1, 1] + [100] * 18, start="2026-11-05 03:00")
+    assert all(p["best_pm"] == 100 for p in plan_activities(pm, pm))
+
+
+def change_frames():
+    idx = pd.date_range("2026-11-01", periods=48, freq="h")
+    air = pd.DataFrame({"pm2_5": [100.0] * 24 + [150.0] * 24}, index=idx)
+    wx = pd.DataFrame({"wind_speed_10m": [10.0] * 24 + [5.0] * 24, "boundary_layer_height": [500.0] * 48}, index=idx)
+    return air, wx, idx[-1]
+
+
+def test_what_changed_lists_only_what_moved():
+    from ml.insights import what_changed
+    air, wx, at = change_frames()
+    res = what_changed(air, wx, at, 300, 100)
+    assert res["summary"] == "PM2.5 is 50% higher than the day before (150 vs 100 µg/m³)."
+    assert res["moved"] == ["Wind fell from 10 to 5 km/h.", "Upwind fire detections rose from 100 to 300."]
+
+
+def test_what_changed_admits_when_nothing_explains_it():
+    from ml.insights import what_changed
+    air, wx, at = change_frames()
+    wx["wind_speed_10m"] = 10.0
+    res = what_changed(air, wx, at, None, None)
+    assert res["moved"] == ["Wind, mixing layer and upwind fires barely moved, so this data doesn't show why."]
+    assert what_changed(air.iloc[:0], wx, at, None, None) is None
