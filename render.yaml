@@ -9,7 +9,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.7
+        value: 3.13.7
       - key: FRONTEND_ORIGIN
         sync: false
       - key: FIRMS_MAP_KEY
