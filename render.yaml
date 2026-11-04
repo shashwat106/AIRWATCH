@@ -6,10 +6,15 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.7
+      - key: OMP_NUM_THREADS
+        value: "1"
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: ARROW_DEFAULT_MEMORY_POOL
+        value: system
       - key: FRONTEND_ORIGIN
         sync: false
       - key: FIRMS_MAP_KEY

@@ -52,7 +52,9 @@ async def warm_forever() -> None:
                 await remembered(key, work, refresh=True)
             except Exception as exc:  # one bad upstream must not stop the rest; visitors still get a live attempt
                 log.warning("warm %s failed: %s", key, type(exc).__name__)
-            await asyncio.sleep(0.5)  # leave room for real visitors between jobs
+            if key.startswith("history:"):
+                service.free_memory()  # one city in memory at a time
+            await asyncio.sleep(2)  # the free tier has little CPU, so leave room for real visitors
         await asyncio.sleep(WARM_EVERY)
 
 

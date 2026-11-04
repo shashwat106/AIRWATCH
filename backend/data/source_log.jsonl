@@ -486,3 +486,57 @@
 {"at": "2026-11-04T12:35:50+00:00", "url": "https://api.openaq.org/v3/locations/5634/latest", "params": {}, "status": 200}
 {"at": "2026-11-04T12:35:50+00:00", "url": "https://api.openaq.org/v3/locations/8118/latest", "params": {}, "status": 200}
 {"at": "2026-11-04T12:35:50+00:00", "url": "https://api.openaq.org/v3/locations/6929/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:10:50+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 28.61, "longitude": 77.21, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:10:52+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 28.61, "longitude": 77.21, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:10:55+00:00", "url": "https://api.openaq.org/v3/sensors/12234753/hours", "params": {"datetime_from": "2026-11-01T13:10:52Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:10:55+00:00", "url": "https://api.openaq.org/v3/sensors/12234714/hours", "params": {"datetime_from": "2026-11-01T13:10:52Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:10:55+00:00", "url": "https://api.openaq.org/v3/sensors/12235047/hours", "params": {"datetime_from": "2026-11-01T13:10:52Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:10:56+00:00", "url": "https://api.openaq.org/v3/sensors/23534/hours", "params": {"datetime_from": "2026-11-01T13:10:52Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:10:57+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 28.46, "longitude": 77.03, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:10:58+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 28.46, "longitude": 77.03, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:00+00:00", "url": "https://api.openaq.org/v3/sensors/14258988/hours", "params": {"datetime_from": "2026-11-01T13:10:58Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:00+00:00", "url": "https://api.openaq.org/v3/sensors/12234708/hours", "params": {"datetime_from": "2026-11-01T13:10:58Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:00+00:00", "url": "https://api.openaq.org/v3/sensors/12236259/hours", "params": {"datetime_from": "2026-11-01T13:10:58Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:02+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 28.57, "longitude": 77.32, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:03+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 28.57, "longitude": 77.32, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:05+00:00", "url": "https://api.openaq.org/v3/sensors/12235101/hours", "params": {"datetime_from": "2026-11-01T13:11:03Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:05+00:00", "url": "https://api.openaq.org/v3/sensors/12235951/hours", "params": {"datetime_from": "2026-11-01T13:11:03Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:05+00:00", "url": "https://api.openaq.org/v3/sensors/12235187/hours", "params": {"datetime_from": "2026-11-01T13:11:03Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:07+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 28.67, "longitude": 77.45, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:08+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 28.67, "longitude": 77.45, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:10+00:00", "url": "https://api.openaq.org/v3/sensors/12235160/hours", "params": {"datetime_from": "2026-11-01T13:11:08Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:10+00:00", "url": "https://api.openaq.org/v3/sensors/12234720/hours", "params": {"datetime_from": "2026-11-01T13:11:08Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:10+00:00", "url": "https://api.openaq.org/v3/sensors/12235779/hours", "params": {"datetime_from": "2026-11-01T13:11:08Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:11+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 30.73, "longitude": 76.78, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:12+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 30.73, "longitude": 76.78, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:14+00:00", "url": "https://api.openaq.org/v3/sensors/12236806/hours", "params": {"datetime_from": "2026-11-01T13:11:12Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:14+00:00", "url": "https://api.openaq.org/v3/sensors/12235976/hours", "params": {"datetime_from": "2026-11-01T13:11:12Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:15+00:00", "url": "https://api.openaq.org/v3/sensors/12328443/hours", "params": {"datetime_from": "2026-11-01T13:11:12Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:16+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 30.9, "longitude": 75.86, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:17+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 30.9, "longitude": 75.86, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:18+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 26.85, "longitude": 80.95, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:20+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 26.85, "longitude": 80.95, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:23+00:00", "url": "https://api.openaq.org/v3/sensors/12235478/hours", "params": {"datetime_from": "2026-11-01T13:11:20Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:23+00:00", "url": "https://api.openaq.org/v3/sensors/12235985/hours", "params": {"datetime_from": "2026-11-01T13:11:20Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:23+00:00", "url": "https://api.openaq.org/v3/sensors/12235522/hours", "params": {"datetime_from": "2026-11-01T13:11:20Z", "limit": 100}, "status": 200}
+{"at": "2026-11-04T13:11:25+00:00", "url": "https://air-quality-api.open-meteo.com/v1/air-quality", "params": {"latitude": 26.45, "longitude": 80.33, "hourly": "pm2_5,pm10,nitrogen_dioxide,carbon_monoxide,sulphur_dioxide,ozone,dust", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:26+00:00", "url": "https://api.open-meteo.com/v1/forecast", "params": {"latitude": 26.45, "longitude": 80.33, "hourly": "wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,boundary_layer_height", "timezone": "Asia/Kolkata", "past_days": 3, "forecast_days": 3}, "status": 200}
+{"at": "2026-11-04T13:11:29+00:00", "url": "https://api.openaq.org/v3/locations/5634/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:29+00:00", "url": "https://api.openaq.org/v3/locations/6929/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:29+00:00", "url": "https://api.openaq.org/v3/locations/5613/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:29+00:00", "url": "https://api.openaq.org/v3/locations/8118/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:32+00:00", "url": "https://api.openaq.org/v3/locations/10825/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:32+00:00", "url": "https://api.openaq.org/v3/locations/301/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:32+00:00", "url": "https://api.openaq.org/v3/locations/5570/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:34+00:00", "url": "https://api.openaq.org/v3/locations/5598/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:34+00:00", "url": "https://api.openaq.org/v3/locations/6960/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:34+00:00", "url": "https://api.openaq.org/v3/locations/6980/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:36+00:00", "url": "https://api.openaq.org/v3/locations/5665/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:36+00:00", "url": "https://api.openaq.org/v3/locations/6924/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:37+00:00", "url": "https://api.openaq.org/v3/locations/5616/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:39+00:00", "url": "https://api.openaq.org/v3/locations/233415/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:39+00:00", "url": "https://api.openaq.org/v3/locations/2583/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:39+00:00", "url": "https://api.openaq.org/v3/locations/10914/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:43+00:00", "url": "https://api.openaq.org/v3/locations/3409318/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:43+00:00", "url": "https://api.openaq.org/v3/locations/5659/latest", "params": {}, "status": 200}
+{"at": "2026-11-04T13:11:43+00:00", "url": "https://api.openaq.org/v3/locations/7140/latest", "params": {}, "status": 200}

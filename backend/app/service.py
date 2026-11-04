@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+import ctypes
+import gc
+import json
 import math
 from datetime import date, timedelta
 from functools import lru_cache
@@ -263,17 +266,47 @@ def archive_fires() -> pd.DataFrame | None:
 
 @lru_cache(maxsize=8)
 def _daily(city_id: str, stamp: str) -> pd.DataFrame:
+    path = f.history_path("daily", city_id)
+    if path.exists():  # written by scripts/precompute.py, so small servers skip this work
+        return pd.read_parquet(path)
     return hist.daily_table(stored("air", city_id), stored_aqi(city_id)["aqi"])
 
 
 @lru_cache(maxsize=8)
 def _fires_daily(city_id: str, stamp: str) -> pd.Series | None:
+    path = f.history_path("upwind", city_id)
+    if path.exists():
+        return pd.read_parquet(path)["upwind"]
     fires = archive_fires()
     if fires is None:
         return None
     city = CITIES[city_id]
     days = pd.DatetimeIndex(sorted(fires.time.dt.normalize().unique()))
     return hist.daily_upwind(fires, city.lat, city.lon, stored("wx", city_id), days)
+
+
+def derived_path(city_id: str):
+    return HISTORY_DIR / f"derived_{city_id}.json"
+
+
+def derived_for(city_id: str, last_full: date) -> dict | None:
+    """Season calendar and notable days from scripts/precompute.py, if they match the stored history."""
+    path = derived_path(city_id)
+    if not path.exists():
+        return None
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if data.get("last_full") == str(last_full) else None
+
+
+def free_memory() -> None:
+    """Drop cached tables and hand memory back. Answers are kept, so a small server stays small."""
+    for cached in (stored, stored_aqi, _daily, _fires_daily):
+        cached.cache_clear()
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except OSError:
+        pass  # not on Linux
 
 
 DAY_HOURS = (9, 14, 19)  # morning, afternoon, evening. Night alone always looks like trapping.
@@ -351,8 +384,11 @@ async def city_history(city: City) -> dict:
     daily = _daily(city.id, str(last_full))
     fires_daily = _fires_daily(city.id, str(last_full))
     this_season, last_season = hist.season_windows(last_full)
-    fires = archive_fires()
-    recent_fires, _ = await fire_frame()
+    saved = derived_for(city.id, last_full)
+    fires = None if saved else archive_fires()
+    recent_fires = None
+    if not saved:
+        recent_fires, _ = await fire_frame()
     fire_note = None if fires_daily is not None else "Fire history needs the FIRMS archive, which needs a FIRMS key."
     season = hist.season_comparison(daily, last_full, fires_daily)
     if fires_daily is not None:
@@ -369,10 +405,10 @@ async def city_history(city: City) -> dict:
         "vs_recent": hist.recent_averages(now_table, today),
         "season": season,
         "season_chart": hist.season_lines(daily, last_full),
-        "calendar": season_calendar(city, air, wx, last_full, recent_fires),
+        "calendar": saved["calendar"] if saved else season_calendar(city, air, wx, last_full, recent_fires),
         "fire_link": hist.fire_link(daily, fires_daily, *this_season),
-        "notable": {"this_season": notable(city, air, wx, this_season, fires),
-                    "last_season": notable(city, air, wx, last_season, fires)},
+        "notable": saved["notable"] if saved else {"this_season": notable(city, air, wx, this_season, fires),
+                                                   "last_season": notable(city, air, wx, last_season, fires)},
         "fire_note": fire_note, "source": MODEL_SOURCE,
         "method_note": "All years use the same model data and the same CPCB calculation. Season figures use complete days only.",
         "range": {"from": AQ_EARLIEST, "to": last_full.isoformat()}, **meta,
