@@ -176,12 +176,6 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 - **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
 - **Advice is general guidance**, not medical advice.
 
-## AI tools disclosure
-
-Built with **Claude Code** (Anthropic, Opus 5.5), which wrote the code, tests and this README under the team's direction. Skills used: `frontend-design` for visual design and `dataviz` for charts and palette validation. _[Add any other tools your team used.]_
-
-## Deployment
-
 **Backend on Render:** push this repo, then in Render choose New, Blueprint and select the repo. `render.yaml` sets it up. Add `FIRMS_MAP_KEY`, `OPENAQ_API_KEY`, and `FRONTEND_ORIGIN` (your Vercel URL, no trailing slash).
 
 **Frontend on Vercel:** import the repo, set the root directory to `frontend`, and add `VITE_API_URL` (your Render URL, no trailing slash).
