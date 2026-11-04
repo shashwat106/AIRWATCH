@@ -39,17 +39,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 28.2,
-        "rmse": 28.2,
-        "n": 1
+        "mae": 34.45,
+        "rmse": 34.85,
+        "n": 14
       },
       "ours_live": {
-        "mae": 31.72,
-        "rmse": 31.72,
-        "n": 1
+        "mae": 30.62,
+        "rmse": 34.17,
+        "n": 14
       },
-      "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served": "ours",
+      "served_reason": "Our model's error is lower on 14 live forecast hours."
     },
     "gurugram": {
       "train_period": [
@@ -87,17 +87,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 36.7,
-        "rmse": 36.7,
-        "n": 1
+        "mae": 41.03,
+        "rmse": 41.8,
+        "n": 14
       },
       "ours_live": {
-        "mae": 39.44,
-        "rmse": 39.44,
-        "n": 1
+        "mae": 38.86,
+        "rmse": 41.67,
+        "n": 14
       },
-      "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served": "ours",
+      "served_reason": "Our model's error is lower on 14 live forecast hours."
     },
     "noida": {
       "train_period": [
@@ -135,17 +135,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 36.7,
-        "rmse": 36.7,
-        "n": 1
+        "mae": 41.03,
+        "rmse": 41.8,
+        "n": 14
       },
       "ours_live": {
-        "mae": 35.58,
-        "rmse": 35.58,
-        "n": 1
+        "mae": 31.62,
+        "rmse": 35.07,
+        "n": 14
       },
-      "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served": "ours",
+      "served_reason": "Our model's error is lower on 14 live forecast hours."
     },
     "ghaziabad": {
       "train_period": [
@@ -183,17 +183,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 23.3,
-        "rmse": 23.3,
-        "n": 1
+        "mae": 25.14,
+        "rmse": 25.38,
+        "n": 14
       },
       "ours_live": {
-        "mae": 23.28,
-        "rmse": 23.28,
-        "n": 1
+        "mae": 26.13,
+        "rmse": 29.0,
+        "n": 14
       },
       "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served_reason": "Open-Meteo's error is lower or equal on 14 live forecast hours."
     },
     "chandigarh": {
       "train_period": [
@@ -231,17 +231,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 4.4,
-        "rmse": 4.4,
-        "n": 1
+        "mae": 3.04,
+        "rmse": 3.18,
+        "n": 14
       },
       "ours_live": {
-        "mae": 8.07,
-        "rmse": 8.07,
-        "n": 1
+        "mae": 4.55,
+        "rmse": 5.77,
+        "n": 14
       },
       "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served_reason": "Open-Meteo's error is lower or equal on 14 live forecast hours."
     },
     "ludhiana": {
       "train_period": [
@@ -279,17 +279,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 16.6,
-        "rmse": 16.6,
-        "n": 1
+        "mae": 10.84,
+        "rmse": 12.26,
+        "n": 14
       },
       "ours_live": {
-        "mae": 18.69,
-        "rmse": 18.69,
-        "n": 1
+        "mae": 14.03,
+        "rmse": 15.26,
+        "n": 14
       },
       "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served_reason": "Open-Meteo's error is lower or equal on 14 live forecast hours."
     },
     "lucknow": {
       "train_period": [
@@ -327,17 +327,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 0.4,
-        "rmse": 0.4,
-        "n": 1
+        "mae": 8.74,
+        "rmse": 10.34,
+        "n": 14
       },
       "ours_live": {
-        "mae": 10.53,
-        "rmse": 10.53,
-        "n": 1
+        "mae": 23.95,
+        "rmse": 26.87,
+        "n": 14
       },
       "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served_reason": "Open-Meteo's error is lower or equal on 14 live forecast hours."
     },
     "kanpur": {
       "train_period": [
@@ -375,17 +375,17 @@
         "n": 576
       },
       "open_meteo_live": {
-        "mae": 0.2,
-        "rmse": 0.2,
-        "n": 1
+        "mae": 8.4,
+        "rmse": 9.88,
+        "n": 14
       },
       "ours_live": {
-        "mae": 1.63,
-        "rmse": 1.63,
-        "n": 1
+        "mae": 19.74,
+        "rmse": 24.04,
+        "n": 14
       },
       "served": "open_meteo",
-      "served_reason": "Not enough live forecast hours yet to show our model beats Open-Meteo."
+      "served_reason": "Open-Meteo's error is lower or equal on 14 live forecast hours."
     }
   }
 }
