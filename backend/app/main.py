@@ -64,7 +64,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="AirWatch API", version="1.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=[FRONTEND_ORIGIN], allow_methods=["GET"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=[FRONTEND_ORIGIN, "https://airwatcher.vercel.app"], allow_methods=["GET"], allow_headers=["*"])
 _hits: dict[str, deque] = defaultdict(deque)
 
 
