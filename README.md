@@ -1,7 +1,5 @@
 # AirWatch
 
-**Neural Storm 2026, Green Planet track. Problem statement GP-01: Air Quality Monitoring & Source Attribution.**
-
 **Team:** LOSERSS. **Members:** SHASHWAT
 **Live app:** https://airwatcher.vercel.app 
 
