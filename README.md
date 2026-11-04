@@ -2,13 +2,10 @@
 
 **Neural Storm 2026, Green Planet track. Problem statement GP-01: Air Quality Monitoring & Source Attribution.**
 
-**Team:** _[team name]_. **Members:** _[member names]_
-
-**Live app:** https://airwatcher.vercel.app **API:** https://airwatch-api-z08r.onrender.com/api/health
+**Team:** LOSERSS. **Members:** SHASHWAT
+**Live app:** https://airwatcher.vercel.app 
 
 AirWatch tells people in North India what the air is like in their city, what it will do in the next 24 hours, when the cleanest time to go out is, what is most likely causing it, and how today compares with the past.
-
-**[Watch the 1-minute pitch video](docs/airwatch-pitch.mp4)**
 
 | Air fills to the real PM2.5 level | Best time outside |
 | --- | --- |
@@ -176,14 +173,8 @@ Every upstream call is logged with its URL and parameters in `backend/data/sourc
 - **Severe band.** CPCB leaves its top band open-ended. The upper limits we use are the common calculator values, which only affect AQI above 400.
 - **Advice is general guidance**, not medical advice.
 
-## AI tools disclosure
-
-Built with **Claude Code** (Anthropic, Opus 5.5), which wrote the code, tests and this README under the team's direction. Skills used: `frontend-design` for visual design and `dataviz` for charts and palette validation. _[Add any other tools your team used.]_
-
-## Deployment
-
 **Backend on Render:** push this repo, then in Render choose New, Blueprint and select the repo. `render.yaml` sets it up. Add `FIRMS_MAP_KEY`, `OPENAQ_API_KEY`, and `FRONTEND_ORIGIN` (your Vercel URL, no trailing slash).
 
 **Frontend on Vercel:** import the repo, set the root directory to `frontend`, and add `VITE_API_URL` (your Render URL, no trailing slash).
 
-Render's free tier sleeps when idle, so the first request can take up to a minute. A free scheduled ping to `/api/health` every 10 minutes keeps it awake. A background task prepares every city's data ahead of visitors, so pages stay fast once it has run. Stored history is in the repo, so re-run `backfill.py` and commit to keep it current.
+
